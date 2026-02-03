@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products - Supermarket App</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        header { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; 
+            padding: 30px 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        header h1 { 
+            margin: 0;
+            padding: 0 20px;
+            font-size: 2em;
+            font-weight: 700;
+        }
+        
+        nav { 
+            background: rgba(52, 73, 94, 0.95);
+            padding: 15px 20px;
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 90px;
+        }
+        
+        nav a { 
+            color: white; 
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        nav a:hover { 
+            background: #667eea;
+            transform: translateY(-2px);
+        }
+        
+        .top-banner {
+            background: white;
+            padding: 25px;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        .search-container {
+            flex: 1;
+            max-width: 500px;
+        }
+        
+        .search-container input {
+            width: 100%;
+            padding: 14px 20px;
+            border: 2px solid #eee;
+            border-radius: 30px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: #f9f9f9;
+        }
+        
+        .search-container input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        /* Accessibility focus styles */
+        a:focus, button:focus, input:focus {
+            outline: 3px solid #ffb400;
+            outline-offset: 2px;
+        }
+
+        .admin-links {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .admin-links a, .admin-links button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .admin-links a:hover, .admin-links button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .filters-sidebar {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+            position: sticky;
+            top: 180px;
+            height: fit-content;
+        }
+        
+        .filters-sidebar h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+            font-size: 1.1em;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .filter-group {
+            margin-bottom: 15px;
+        }
+        
+        .filter-group label {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .filter-group label:hover {
+            background: #f5f5f5;
+        }
+        
+        .filter-group input[type="checkbox"],
+        .filter-group input[type="radio"] {
+            margin-right: 12px;
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            accent-color: #667eea;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 25px;
+            padding: 30px 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 24px;
+        }
+        
+        .product-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border: 1px solid #f0f0f0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+        
+        .product-image {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .product-image::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1), transparent);
+        }
+        
+        .product-info {
+            padding: 18px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .product-name {
+            font-size: 1em;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            line-height: 1.4;
+            min-height: 2.8em;
+        }
+        
+        .product-category {
+            font-size: 0.8em;
+            color: #667eea;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 600;
+        }
+        
+        .product-price {
+            font-size: 1.5em;
+            color: #27ae60;
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+        
+        .product-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+        
+        .btn-add-cart {
+            flex: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+        
+        .btn-add-cart:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-view {
+            flex: 1;
+            background: #f0f0f0;
+            color: #2c3e50;
+            padding: 12px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+        
+        .btn-view:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+        
+        .error-message {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+        
+        .empty-state h2 {
+            margin-bottom: 10px;
+        }
+        
+        .breadcrumb {
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 1px solid #ddd;
+            font-size: 13px;
+            color: #7f8c8d;
+        }
+        
+        .cart-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #27ae60;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease;
+            z-index: 1000;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters-sidebar {
+                order: 2;
+            }
+            
+            .product-grid {
+                order: 1;
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            
+            .top-banner {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .admin-links {
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header>
+        <h1>🛒 Supermarket Management System</h1>
+    </header>
+    
+    <nav role="navigation" aria-label="Main navigation">
+        <a href="/">🏠 Home</a>
+        <a href="/products">📦 Products</a>
+        <a href="/cart">🛍️ Shopping Cart</a>
+        <a href="/orders">📋 Orders</a>
+        <a href="/inventory">📊 Inventory</a>
+        <a href="/admin">⚙️ Admin</a>
+        <a href="/monitoring">📈 System Status</a>
+    </nav>
+    
+    <main id="main">
+    <div class="top-banner">
+        <div class="search-container">
+            <input type="text" id="searchInput" aria-label="Search products" placeholder="Search products...">
+        </div>
+        <div class="admin-links">
+            <a href="/admin">+ Add Product</a>
+            <button type="button" onclick="window.location.href='/cart'">🛍️ Cart</button>
+        </div>
+    </div>
+    
+    <div class="breadcrumb">
+        Home / Products
+    </div>
+    
+    <div class="main-content">
+        <div class="filters-sidebar">
+            <h3>Categories</h3>
+            <div id="categoriesFilter"></div>
+            <h3 style="margin-top: 20px;">Price Range</h3>
+            <div class="filter-group">
+                <label>
+                    <input type="radio" name="price" value="all" checked> All Prices
+                </label>
+                <label>
+                    <input type="radio" name="price" value="0-5"> $0 - $5
+                </label>
+                <label>
+                    <input type="radio" name="price" value="5-10"> $5 - $10
+                </label>
+                <label>
+                    <input type="radio" name="price" value="10-50"> $10+
+                </label>
+            </div>
+        </div>
+        
+        <div id="mainArea">
+            <div class="product-grid" id="products">
+                <div class="loading">Loading products...</div>
+            </div>
+        </div>
+    </div>
+    </main>
+    
+    <script>
+        let allProducts = [];
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        
+        const categoryEmojis = {
+            'Dairy': '🥛',
+            'Bakery': '🥐',
+            'Produce': '🍎',
+            'Beverages': '🥤',
+            'Snacks': '🍪',
+            'Meat': '🥩',
+            'Vegetables': '🥬',
+            'Frozen': '🧊'
+        };
+        
+        async function loadProducts() {
+            try {
+                const response = await fetch('/api/products');
+                if (!response.ok) throw new Error('Failed to load products');
+                allProducts = await response.json();
+                setupCategories();
+                renderProducts(allProducts);
+            } catch (error) {
+                document.getElementById('products').innerHTML = 
+                    `<div class="error-message" style="grid-column: 1/-1;">Error loading products: ${error.message}</div>`;
+            }
+        }
+        
+        function setupCategories() {
+            const categories = [...new Set(allProducts.map(p => p.category))];
+            const categoriesFilter = document.getElementById('categoriesFilter');
+            categoriesFilter.innerHTML = categories.map(cat => `
+                <label class="filter-group">
+                    <input type="checkbox" value="${cat}" class="category-filter" onchange="applyFilters()"> 
+                    ${categoryEmojis[cat] || '📦'} ${cat}
+                </label>
+            `).join('');
+        }
+        
+        function applyFilters() {
+            const selectedCategories = Array.from(document.querySelectorAll('.category-filter:checked'))
+                .map(cb => cb.value);
+            const priceFilter = document.querySelector('input[name="price"]:checked').value;
+            
+            let filtered = allProducts;
+            
+            if (selectedCategories.length > 0) {
+                filtered = filtered.filter(p => selectedCategories.includes(p.category));
+            }
+            
+            if (priceFilter !== 'all') {
+                const [min, max] = priceFilter.split('-').map(v => v ? parseInt(v) : Infinity);
+                filtered = filtered.filter(p => p.price >= min && p.price <= max);
+            }
+            
+            renderProducts(filtered);
+        }
+        
+        function renderProducts(products) {
+            const container = document.getElementById('products');
+            
+            if (products.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><h2>No Products Found</h2><p>Try adjusting your filters</p></div>';
+                return;
+            }
+            
+            container.innerHTML = products.map(p => `
+                <div class="product-card">
+                    <div class="product-image">${categoryEmojis[p.category] || '📦'}</div>
+                    <div class="product-info">
+                        <div class="product-category">${p.category}</div>
+                        <div class="product-name">${p.name}</div>
+                        <div class="product-price">$${p.price.toFixed(2)}</div>
+                        <div class="product-actions">
+                            <button class="btn-add-cart" onclick="addToCart('${p.id}', '${p.name}', '${p.category}', ${p.price})">
+                                Add to Cart
+                            </button>
+                            <button class="btn-view" onclick="viewProduct('${p.id}')">View</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function addToCart(id, name, category, price) {
+            const item = cart.find(i => i.id === id);
+            if (item) {
+                item.quantity++;
+            } else {
+                cart.push({ id, name, category, price, quantity: 1 });
+            }
+            localStorage.setItem('cart', JSON.stringify(cart));
+            showNotification(`${name} added to cart!`);
+        }
+        
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'cart-notification';
+            notification.setAttribute('role', 'status');
+            notification.setAttribute('aria-live', 'polite');
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+        
+        function openCart() {
+            window.location.href = '/cart';
+        }
+        
+        function viewProduct(id) {
+            const product = allProducts.find(p => p.id === id);
+            if (product) {
+                alert(`Product: ${product.name}\nCategory: ${product.category}\nPrice: $${product.price}`);
+            }
+        }
+        
+        document.getElementById('searchInput').addEventListener('keyup', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filtered = allProducts.filter(p => 
+                p.name.toLowerCase().includes(searchTerm) || 
+                p.category.toLowerCase().includes(searchTerm)
+            );
+            renderProducts(filtered);
+        });
+        
+        document.querySelectorAll('input[name="price"]').forEach(radio => {
+            radio.addEventListener('change', applyFilters);
+        });
+        
+        loadProducts();
+    </script>
+</body>
+</html>

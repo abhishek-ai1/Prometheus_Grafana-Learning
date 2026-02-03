@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders - Supermarket App</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #f0f2f5; 
+            color: #333;
+        }
+        
+        header { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; 
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        nav { 
+            background: #34495e; 
+            padding: 12px 20px;
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        nav a { 
+            color: white; 
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        
+        nav a:hover { 
+            background: #667eea;
+        }
+
+        /* Accessibility focus styles */
+        a:focus, button:focus, input:focus {
+            outline: 3px solid #ffb400;
+            outline-offset: 2px;
+        }
+        
+        .breadcrumb {
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 1px solid #ddd;
+            font-size: 13px;
+            color: #7f8c8d;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        
+        .page-header {
+            margin-bottom: 30px;
+        }
+        
+        .page-header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .filter-btn {
+            background: white;
+            border: 2px solid #ddd;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .orders-grid {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .order-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        
+        .order-card:hover {
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        
+        .order-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .header-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header-label {
+            font-size: 12px;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .header-value {
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-placed {
+            background: #d6eaf8;
+            color: #0b5394;
+        }
+        
+        .status-processing {
+            background: #fef5e7;
+            color: #9a6e0a;
+        }
+        
+        .status-delivered {
+            background: #d5f4e6;
+            color: #0b5f4c;
+        }
+        
+        .order-items {
+            padding: 20px;
+        }
+        
+        .items-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .order-item {
+            display: grid;
+            grid-template-columns: 60px 1fr 60px 80px;
+            gap: 15px;
+            padding: 12px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        
+        .item-emoji {
+            font-size: 30px;
+            text-align: center;
+        }
+        
+        .item-name {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+        
+        .item-qty {
+            text-align: center;
+            color: #666;
+            font-size: 13px;
+        }
+        
+        .item-price {
+            text-align: right;
+            font-weight: 600;
+            color: #27ae60;
+            font-size: 14px;
+        }
+        
+        .order-footer {
+            padding: 20px;
+            background: #f9f9f9;
+            border-top: 1px solid #eee;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .footer-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .footer-label {
+            color: #666;
+            font-size: 13px;
+        }
+        
+        .footer-value {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .total-section {
+            grid-column: 1 / -1;
+            padding-top: 15px;
+            border-top: 2px solid #ddd;
+            display: flex;
+            justify-content: flex-end;
+            gap: 30px;
+        }
+        
+        .total-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .total-label {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .total-value {
+            font-weight: bold;
+            font-size: 18px;
+            color: #27ae60;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 10px;
+            color: #7f8c8d;
+        }
+        
+        .empty-state h2 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .empty-state a {
+            display: inline-block;
+            margin-top: 20px;
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        .empty-state a:hover {
+            background: #5568d3;
+        }
+        
+        @media (max-width: 768px) {
+            .order-header {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            
+            .order-item {
+                grid-template-columns: 50px 1fr 50px;
+            }
+            
+            .order-footer {
+                grid-template-columns: 1fr;
+            }
+            
+            .total-section {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header>
+        <h1>📋 My Orders</h1>
+    </header>
+    
+    <nav role="navigation" aria-label="Main navigation">
+        <a href="/">🏠 Home</a>
+        <a href="/products">📦 Products</a>
+        <a href="/cart">🛍️ Shopping Cart</a>
+        <a href="/orders">📋 Orders</a>
+        <a href="/inventory">📊 Inventory</a>
+        <a href="/admin">⚙️ Admin</a>
+        <a href="/monitoring">📈 System Status</a>
+    </nav>
+    
+    <div class="breadcrumb">
+        Home / Orders
+    </div>
+    
+    <main id="main">
+    <div class="container">
+        <div class="page-header">
+            <h1>Order History</h1>
+            <div class="filters">
+                <button class="filter-btn active" onclick="filterOrders('all')">All Orders</button>
+                <button class="filter-btn" onclick="filterOrders('placed')">🔵 Placed</button>
+                <button class="filter-btn" onclick="filterOrders('processing')">🟡 Processing</button>
+                <button class="filter-btn" onclick="filterOrders('delivered')">🟢 Delivered</button>
+            </div>
+        </div>
+        
+        <div class="orders-grid" id="ordersContainer">
+            <div class="empty-state">
+                <h2>No Orders Yet</h2>
+                <p>You haven't placed any orders. Start shopping!</p>
+                <a href="/products">Browse Products</a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let allOrders = [];
+        let currentFilter = 'all';
+        
+        const categoryEmojis = {
+            'Dairy': '🥛',
+            'Bakery': '🥐',
+            'Produce': '🍎',
+            'Beverages': '🥤',
+            'Snacks': '🍪',
+            'Meat': '🥩',
+            'Vegetables': '🥬',
+            'Frozen': '🧊'
+        };
+        
+        function loadOrders() {
+            allOrders = JSON.parse(localStorage.getItem('orders')) || [];
+            renderOrders();
+        }
+        
+        function renderOrders() {
+            const container = document.getElementById('ordersContainer');
+            
+            let filtered = allOrders;
+            if (currentFilter !== 'all') {
+                filtered = allOrders.filter(o => o.status === currentFilter);
+            }
+            
+            // Sort by newest first
+            filtered = filtered.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h2>No Orders Found</h2>
+                        <p>No orders match your filter.</p>
+                        <a href="/products">Continue Shopping</a>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = filtered.map(order => {
+                const date = new Date(order.timestamp);
+                const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+                const itemsCount = order.items.reduce((sum, i) => sum + i.quantity, 0);
+                
+                return `
+                    <div class="order-card">
+                        <div class="order-header">
+                            <div class="header-item">
+                                <span class="header-label">Order ID</span>
+                                <span class="header-value">#${order.id}</span>
+                            </div>
+                            <div class="header-item">
+                                <span class="header-label">Date</span>
+                                <span class="header-value">${formattedDate.split(' ')[0]}</span>
+                            </div>
+                            <div class="header-item">
+                                <span class="header-label">Items</span>
+                                <span class="header-value">${itemsCount} items</span>
+                            </div>
+                            <div class="header-item">
+                                <span class="header-label">Status</span>
+                                <span class="status-badge status-${order.status || 'placed'}">
+                                    ${order.status || 'placed'}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="order-items">
+                            <div class="items-title">Items Ordered</div>
+                            ${order.items.map(item => `
+                                <div class="order-item">
+                                    <div class="item-emoji">${categoryEmojis[item.category] || '📦'}</div>
+                                    <div class="item-name">${item.name}</div>
+                                    <div class="item-qty">x${item.quantity}</div>
+                                    <div class="item-price">$${(item.price * item.quantity).toFixed(2)}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div class="order-footer">
+                            <div class="footer-item">
+                                <span class="footer-label">Subtotal</span>
+                                <span class="footer-value">$${order.subtotal.toFixed(2)}</span>
+                            </div>
+                            <div class="footer-item">
+                                <span class="footer-label">Tax (10%)</span>
+                                <span class="footer-value">$${order.tax.toFixed(2)}</span>
+                            </div>
+                            <div class="footer-item">
+                                <span class="footer-label">Delivery</span>
+                                <span class="footer-value">Free</span>
+                            </div>
+                            <div class="total-section">
+                                <div class="total-item">
+                                    <span class="total-label">Total Amount</span>
+                                    <span class="total-value">$${order.total.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function filterOrders(status) {
+            currentFilter = status;
+            
+            // Update active button
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            renderOrders();
+        }
+        
+        loadOrders();
+    </script>
+</body>
+</html>

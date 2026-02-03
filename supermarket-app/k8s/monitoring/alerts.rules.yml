@@ -1,0 +1,33 @@
+groups:
+  - name: supermarket-alerts
+    rules:
+      - alert: InstanceDown
+        expr: up{job=~"bff-service|core-service|ui-service|prometheus|grafana"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Instance down ({{ $labels.job }})"
+          description: "{{ $labels.job }} has been reporting 'up = 0' for more than 1 minute."
+
+      - alert: HighRequestErrorRate
+        expr: |
+          increase(http_requests_total{job=~"bff-service|core-service|ui-service",code=~"5.."}[5m])
+            / ignoring(code) group_left sum by (job) (increase(http_requests_total{job=~"bff-service|core-service|ui-service"}[5m]))
+            > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High 5xx error rate on {{ $labels.job }}"
+          description: "{{ $labels.job }} has >5% 5xx error rate over the last 5 minutes."
+
+      - alert: HighP95Latency
+        expr: |
+          histogram_quantile(0.95, sum(rate(request_duration_seconds_bucket{job=~"bff-service|core-service|ui-service"}[5m])) by (le, job)) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High p95 latency on {{ $labels.job }}"
+          description: "p95 request latency for {{ $labels.job }} is > 500ms over the last 5 minutes."
