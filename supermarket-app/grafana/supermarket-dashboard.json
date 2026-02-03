@@ -1,42 +1,261 @@
 {
-  "dashboard": {
-    "id": null,
-    "uid": null,
-    "title": "Supermarket System Overview",
-    "timezone": "browser",
-    "schemaVersion": 16,
-    "version": 0,
-    "panels": [
+  "annotations": {
+    "list": [
       {
-        "type": "graph",
-        "title": "Request Rate (req/s)",
-        "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
-        "targets": [
-          { "expr": "sum(rate(bff_requests_total[5m]))", "refId": "A" },
-          { "expr": "sum(rate(core_service_requests_total[5m]))", "refId": "B" }
-        ]
-      },
-      {
-        "type": "graph",
-        "title": "P95 Latency (ms)",
-        "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
-        "targets": [
-          { "expr": "histogram_quantile(0.95, rate(bff_request_duration_seconds_bucket[5m])) * 1000", "refId": "A" }
-        ]
-      },
-      {
-        "type": "singlestat",
-        "title": "Total Orders (count)",
-        "gridPos": { "x": 0, "y": 8, "w": 6, "h": 4 },
-        "targets": [ { "expr": "sum(orders_created_total)", "refId": "A" } ]
-      },
-      {
-        "type": "singlestat",
-        "title": "Services Up",
-        "gridPos": { "x": 6, "y": 8, "w": 6, "h": 4 },
-        "targets": [ { "expr": "up", "refId": "A" } ]
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
       }
     ]
   },
-  "overwrite": true
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "expr": "sum(rate(bff_requests_total[5m]))",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "BFF Requests",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(core_service_requests_total[5m]))",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "Core Service Requests",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(rate(ui_service_requests_total[5m]))",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "UI Service Requests",
+          "refId": "C"
+        }
+      ],
+      "title": "Request Rate (req/s)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(bff_request_duration_seconds_bucket[5m])) * 1000",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "BFF P95",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(core_service_request_duration_seconds_bucket[5m])) * 1000",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "Core Service P95",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(ui_service_request_duration_seconds_bucket[5m])) * 1000",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "UI Service P95",
+          "refId": "C"
+        }
+      ],
+      "title": "P95 Latency (ms)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 8
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "pieType": "pie",
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "expr": "sum(orders_created_total)",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "Orders",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Orders Created",
+      "type": "piechart"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 8
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "pieType": "pie",
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "expr": "sum(products_queried_total)",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "Products Queried",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Products Queried",
+      "type": "piechart"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "expr": "up",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "{{ job }}",
+          "refId": "A"
+        }
+      ],
+      "title": "Services Up/Down",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 30,
+  "style": "dark",
+  "tags": ["supermarket", "microservices"],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Supermarket System Overview",
+  "uid": "supermarket-overview",
+  "version": 1
 }

@@ -1,0 +1,138 @@
+# Docker Compose file to bootstrap a local Kubernetes cluster with kind/minikube
+# This is a convenience wrapper - actual K8s deployment happens via kubectl
+#
+# Usage:
+#   docker-compose -f docker-compose-k8s.yml up
+#   This will start kind cluster and load images
+#
+# For actual deployment:
+#   kubectl apply -f k8s/base/namespace-configmap.yaml
+#   kubectl apply -f k8s/base/deployments.yaml
+#   kubectl apply -f k8s/base/services.yaml
+#   kubectl apply -f k8s/monitoring/kubernetes-monitoring.yaml
+#   kubectl apply -f k8s/argocd/application.yaml
+
+version: '3.8'
+
+services:
+  # Kind Kubernetes Cluster Control Plane
+  # This service simulates a Kubernetes cluster using kind
+  # Note: In production, use managed K8s services (EKS, GKE, AKS)
+  kind-control-plane:
+    image: kindest/node:v1.27.0
+    container_name: kind-control-plane
+    privileged: true
+    ports:
+      - "6443:6443"
+      - "80:80"
+      - "443:443"
+    environment:
+      - PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    volumes:
+      - /var/lib/docker
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    networks:
+      - supermarket-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6443/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Build images
+  build-auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    image: supermarket-app-auth-service:latest
+    container_name: build-auth-service
+    networks:
+      - supermarket-network
+    restart: "no"
+
+  build-customer-mgmt:
+    build:
+      context: ./services/customer-mgmt
+      dockerfile: Dockerfile
+    image: supermarket-app-customer-mgmt:latest
+    container_name: build-customer-mgmt
+    networks:
+      - supermarket-network
+    restart: "no"
+
+  build-bff-service:
+    build:
+      context: ./services/bff
+      dockerfile: Dockerfile
+    image: supermarket-app-bff-service:latest
+    container_name: build-bff-service
+    networks:
+      - supermarket-network
+    restart: "no"
+
+  build-core-service:
+    build:
+      context: ./services/core-service
+      dockerfile: Dockerfile
+    image: supermarket-app-core-service:latest
+    container_name: build-core-service
+    networks:
+      - supermarket-network
+    restart: "no"
+
+  build-ui-service:
+    build:
+      context: ./services/ui-service
+      dockerfile: Dockerfile
+    image: supermarket-app-ui-service:latest
+    container_name: build-ui-service
+    networks:
+      - supermarket-network
+    restart: "no"
+
+  # Kubernetes Dashboard
+  kubernetes-dashboard:
+    image: kubernetesui/dashboard:v2.7.0
+    container_name: k8s-dashboard
+    ports:
+      - "8443:8443"
+    environment:
+      - TZ=UTC
+    networks:
+      - supermarket-network
+    restart: unless-stopped
+    depends_on:
+      - kind-control-plane
+
+  # Setup helper (runs kubectl commands to deploy apps)
+  k8s-deployer:
+    image: bitnami/kubectl:latest
+    container_name: k8s-deployer
+    volumes:
+      - ./k8s:/k8s
+    environment:
+      - KUBECONFIG=/root/.kube/config
+    networks:
+      - supermarket-network
+    restart: "no"
+    entrypoint: |
+      sh -c "
+      sleep 30 && \
+      echo 'Deploying supermarket app to Kubernetes...' && \
+      kubectl apply -f /k8s/base/namespace-configmap.yaml && \
+      kubectl apply -f /k8s/base/deployments.yaml && \
+      kubectl apply -f /k8s/base/services.yaml && \
+      kubectl apply -f /k8s/monitoring/kubernetes-monitoring.yaml && \
+      echo 'Deployment complete!'
+      "
+    depends_on:
+      - kind-control-plane
+
+networks:
+  supermarket-network:
+    driver: bridge
+
+volumes:
+  k8s-storage:
+    driver: local

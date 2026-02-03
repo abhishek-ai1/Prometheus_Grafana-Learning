@@ -1,0 +1,64 @@
+---
+# Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: supermarket
+  labels:
+    name: supermarket
+
+---
+# ConfigMap for Auth Service
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-service-config
+  namespace: supermarket
+data:
+  SECRET_KEY: "your-secret-key-change-in-production"
+  ENVIRONMENT: "production"
+
+---
+# ConfigMap for BFF Service
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bff-service-config
+  namespace: supermarket
+data:
+  ENVIRONMENT: "production"
+  AUTH_SERVICE_URL: "http://auth-service:5003"
+  CUSTOMER_MGMT_URL: "http://customer-mgmt:5004"
+  CORE_SERVICE_URL: "http://core-service:5001"
+
+---
+# ConfigMap for Customer Management
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: customer-mgmt-config
+  namespace: supermarket
+data:
+  ENVIRONMENT: "production"
+  AUTH_SERVICE_URL: "http://auth-service:5003"
+
+---
+# ConfigMap for Core Service
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: core-service-config
+  namespace: supermarket
+data:
+  ENVIRONMENT: "production"
+
+---
+# ConfigMap for UI Service
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ui-service-config
+  namespace: supermarket
+data:
+  ENVIRONMENT: "production"
+  API_BASE_URL: "http://bff-service:5000"

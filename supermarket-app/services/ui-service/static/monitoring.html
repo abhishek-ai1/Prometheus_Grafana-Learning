@@ -330,14 +330,20 @@
         <h1>📊 System Monitoring Dashboard</h1>
     </header>
     
-    <nav>
-        <a href="/">🏠 Home</a>
-        <a href="/products">📦 Products</a>
-        <a href="/cart">🛍️ Cart</a>
-        <a href="/orders">📋 Orders</a>
-        <a href="/inventory">📊 Inventory</a>
-        <a href="/admin">⚙️ Admin</a>
-        <a href="/monitoring">📈 System Status</a>
+    <nav id="navbar" style="justify-content: space-between; align-items: center;">
+        <div id="navLinks" style="display: flex; gap: 30px; flex-wrap: wrap;">
+            <a href="/">🏠 Home</a>
+            <a href="/products">📦 Products</a>
+            <a href="/cart">🛍️ Shopping Cart</a>
+            <a href="/orders">📋 Orders</a>
+            <a class="admin-only" href="/inventory">📊 Inventory</a>
+            <a class="admin-only" href="/admin">⚙️ Admin</a>
+            <a href="/monitoring">📈 System Status</a>
+        </div>
+        <div id="userInfo" style="display: flex; align-items: center; gap: 20px; margin-left: auto;">
+            <span id="userDisplay" style="color: white; font-size: 0.95em;"></span>
+            <button id="logoutBtn" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">Logout</button>
+        </div>
     </nav>
     
     <div class="container">
@@ -578,51 +584,92 @@
                 const end = Math.floor(Date.now() / 1000);
                 const start = end - 10 * 60;
                 const step = 60;
-                const q = encodeURIComponent('sum by (job) (rate(bff_requests_total[5m]))');
-                const url = `/api/prometheus/query_range?query=${q}&start=${start}&end=${end}&step=${step}`;
-                const res = await fetch(url);
-                const json = await res.json();
-                if (json.status === 'success' && json.data && json.data.result) {
-                    const labels = [];
-                    const datasets = [];
-                    // create labels from first series
-                    if (json.data.result.length && json.data.result[0].values) {
-                        json.data.result[0].values.forEach(v => labels.push(new Date(v[0]*1000).toLocaleTimeString()));
-                    }
-                    json.data.result.forEach((series, idx) => {
-                        const data = series.values.map(v => parseFloat(v[1]));
-                        datasets.push({
-                            label: series.metric.job || series.metric.instance || `series-${idx}`,
-                            data,
-                            borderColor: idx===0? '#667eea' : '#764ba2',
-                            backgroundColor: 'rgba(102,126,234,0.08)',
-                            tension: 0.2,
-                            fill: true
+                const queries = [
+                    'sum by (job) (rate(bff_requests_total[5m]))',
+                    'sum by (job) (rate(core_service_requests_total[5m]))',
+                    'sum by (job) (rate(ui_service_requests_total[5m]))'
+                ];
+                
+                let allDatasets = [];
+                const colors = ['#667eea', '#764ba2', '#e74c3c'];
+                const labels = [];
+                
+                for (let i = 0; i < queries.length; i++) {
+                    const q = encodeURIComponent(queries[i]);
+                    const url = `/api/prometheus/query_range?query=${q}&start=${start}&end=${end}&step=${step}`;
+                    const res = await fetch(url);
+                    const json = await res.json();
+                    
+                    if (json.status === 'success' && json.data && json.data.result) {
+                        if (i === 0 && json.data.result.length && json.data.result[0].values) {
+                            json.data.result[0].values.forEach(v => labels.push(new Date(v[0]*1000).toLocaleTimeString()));
+                        }
+                        json.data.result.forEach((series) => {
+                            const data = series.values.map(v => parseFloat(v[1]) * 60); // Convert to per minute
+                            allDatasets.push({
+                                label: series.metric.job || series.metric.instance,
+                                data,
+                                borderColor: colors[allDatasets.length % colors.length],
+                                backgroundColor: 'rgba(102,126,234,0.08)',
+                                tension: 0.2,
+                                fill: true,
+                                borderWidth: 2
+                            });
                         });
-                    });
-                    if (requestsChart) requestsChart.destroy();
-                    const ctx = document.getElementById('requestsChart').getContext('2d');
-                    requestsChart = new Chart(ctx, { type: 'line', data: { labels, datasets }, options: { responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true}} } });
+                    }
                 }
+                
+                if (requestsChart) requestsChart.destroy();
+                const ctx = document.getElementById('requestsChart').getContext('2d');
+                requestsChart = new Chart(ctx, { 
+                    type: 'line', 
+                    data: { labels, datasets: allDatasets }, 
+                    options: { 
+                        responsive:true, 
+                        maintainAspectRatio:false, 
+                        scales:{y:{beginAtZero:true}},
+                        plugins: {
+                            legend: { display: true, position: 'top' }
+                        }
+                    } 
+                });
             } catch (e) {
                 console.warn('Prometheus request rate load failed', e);
             }
 
-            // Load response time distribution (approx) using histogram_quantile for bff
+            // Load response time distribution (approx) using histogram_quantile for all services
             try {
-                const q = encodeURIComponent('histogram_quantile(0.95, sum(rate(bff_request_duration_seconds_bucket[5m])) by (le)) * 1000');
-                const res2 = await fetch(`/api/prometheus/query?query=${q}`);
-                const j2 = await res2.json();
-                let p95 = 0;
-                if (j2.status === 'success' && j2.data.result.length) p95 = parseFloat(j2.data.result[0].value[1]);
-                // simple distribution buckets approximated
-                const d0 = Math.max(0, 50 - p95);
-                const d1 = Math.max(0, Math.min(100, p95) - 50);
-                const d2 = Math.max(0, Math.min(200, p95) - 100);
-                const d3 = Math.max(0, p95 - 200);
+                const queries = [
+                    'histogram_quantile(0.95, sum(rate(bff_request_duration_seconds_bucket[5m])) by (le)) * 1000',
+                    'histogram_quantile(0.95, sum(rate(core_service_request_duration_seconds_bucket[5m])) by (le)) * 1000',
+                    'histogram_quantile(0.95, sum(rate(ui_service_request_duration_seconds_bucket[5m])) by (le)) * 1000'
+                ];
+                
+                let totalP95 = 0;
+                for (const query of queries) {
+                    const q = encodeURIComponent(query);
+                    const res = await fetch(`/api/prometheus/query?query=${q}`);
+                    const j = await res.json();
+                    if (j.status === 'success' && j.data.result.length) {
+                        totalP95 += parseFloat(j.data.result[0].value[1]);
+                    }
+                }
+                
+                totalP95 = totalP95 / queries.length; // average
+                
+                // Distribution buckets
+                const d0 = Math.max(0, 50 - totalP95);
+                const d1 = Math.max(0, Math.min(100, totalP95) - 50);
+                const d2 = Math.max(0, Math.min(200, totalP95) - 100);
+                const d3 = Math.max(0, totalP95 - 200);
                 const data = [d0, d1, d2, d3];
-                if (responseTimeChart) responseTimeChart.data.datasets[0].data = data; else initCharts();
-                responseTimeChart.update();
+                
+                if (responseTimeChart) {
+                    responseTimeChart.data.datasets[0].data = data;
+                    responseTimeChart.update();
+                } else {
+                    initCharts();
+                }
             } catch (e) {
                 console.warn('Prometheus response time load failed', e);
             }
@@ -632,16 +679,29 @@
             loadServices();
             renderEndpoints();
             updateStats();
-            initCharts();
+            loadPrometheusCharts();
             
-            // Auto-refresh every 30 seconds
+            // Auto-refresh every 5 seconds for real-time updates
             setInterval(() => {
                 loadServices();
                 updateStats();
-            }, 30000);
+                loadPrometheusCharts();
+            }, 5000);
+            
+            // Manual refresh button
+            const refreshBtn = document.querySelector('.refresh-btn');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', () => {
+                    refreshBtn.textContent = '⟳ Refreshing...';
+                    refreshDashboard().then(() => {
+                        refreshBtn.textContent = '⟳ Refresh';
+                    });
+                });
+            }
         }
         
         init();
     </script>
+    <script src="/auth-helper.js"></script>
 </body>
 </html>

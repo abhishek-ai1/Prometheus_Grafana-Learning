@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Supermarket Management System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .login-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 450px;
+            width: 100%;
+            margin: 20px;
+            padding: 60px 40px;
+            animation: slideUp 0.5s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .logo-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            color: #666;
+            text-align: center;
+            font-size: 0.95em;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+        
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+        
+        input[type="email"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        
+        .login-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .login-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        .demo-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .demo-section h3 {
+            color: #333;
+            font-size: 0.95em;
+            margin-bottom: 12px;
+        }
+        
+        .demo-btn {
+            display: inline-block;
+            padding: 10px 16px;
+            margin-right: 10px;
+            margin-bottom: 8px;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+        
+        .demo-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .demo-btn.customer {
+            border-color: #16a085;
+            color: #16a085;
+        }
+        
+        .demo-btn.customer:hover {
+            background: #16a085;
+            color: white;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            font-size: 0.9em;
+            margin-top: 8px;
+            display: none;
+            animation: shake 0.5s ease-out;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .info-badge {
+            background: #ecf0f1;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            color: #555;
+            border-left: 3px solid #3498db;
+        }
+        
+        .spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <div class="logo-icon">🛒</div>
+            <h1>Supermarket</h1>
+        </div>
+        
+        <div class="subtitle">Management System</div>
+        
+        <div class="info-badge">
+            🔒 Secure authentication with role-based access control
+        </div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    placeholder="Enter your email"
+                    required
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    placeholder="Enter your password"
+                    required
+                >
+            </div>
+            
+            <div class="error-message" id="errorMessage"></div>
+            
+            <button type="submit" class="login-btn" id="loginBtn">
+                <span class="btn-text">Sign In</span>
+                <div class="spinner"></div>
+            </button>
+        </form>
+        
+        <div class="demo-section">
+            <h3>👤 Demo Accounts:</h3>
+            <button type="button" class="demo-btn" onclick="fillAdmin()">
+                👨‍💼 Admin (Full Access)
+            </button>
+            <button type="button" class="demo-btn customer" onclick="fillCustomer()">
+                👤 Customer (Limited)
+            </button>
+            <div style="font-size: 0.85em; color: #666; margin-top: 10px;">
+                Click to auto-fill credentials →
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Use relative paths so the UI origin (same host/port) is used.
+        // The ui-service will proxy `/api/*` to the internal BFF when needed.
+        const API_URL = '';
+        const AUTH_SERVICE = '';
+        
+        // Check if already logged in
+        window.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('authToken');
+            if (token) {
+                // Verify token is valid
+                verifyToken(token);
+            }
+        });
+        
+        function fillAdmin() {
+            document.getElementById('email').value = 'admin@supermarket.com';
+            document.getElementById('password').value = 'admin123';
+            document.getElementById('email').focus();
+        }
+        
+        function fillCustomer() {
+            document.getElementById('email').value = 'customer@supermarket.com';
+            document.getElementById('password').value = 'customer123';
+            document.getElementById('email').focus();
+        }
+        
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
+            setTimeout(() => errorEl.classList.remove('show'), 5000);
+        }
+        
+        function setLoading(isLoading) {
+            const btn = document.getElementById('loginBtn');
+            const spinner = btn.querySelector('.spinner');
+            const text = btn.querySelector('.btn-text');
+            
+            if (isLoading) {
+                btn.disabled = true;
+                text.style.display = 'none';
+                spinner.style.display = 'block';
+            } else {
+                btn.disabled = false;
+                text.style.display = 'inline';
+                spinner.style.display = 'none';
+            }
+        }
+        
+        async function verifyToken(token) {
+            try {
+                const response = await fetch(`${AUTH_SERVICE}/api/auth/verify`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    localStorage.setItem('permissions', JSON.stringify(data.permissions));
+                    window.location.href = '/index.html';
+                } else {
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('permissions');
+                }
+            } catch (error) {
+                console.error('Token verification failed:', error);
+                localStorage.removeItem('authToken');
+            }
+        }
+        
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            setLoading(true);
+            
+            try {
+                // Try to login via BFF first, then fallback to auth-service
+                let response;
+                try {
+                    // First try same-origin BFF proxy via ui-service
+                    response = await fetch(`/api/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+                } catch {
+                    // Fallback to auth-service if BFF is unavailable
+                    response = await fetch(`/api/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+                }
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Store auth data
+                    localStorage.setItem('authToken', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    // Get permissions
+                    const permResponse = await fetch(`/api/auth/permissions`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${data.token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (permResponse.ok) {
+                        const permissions = await permResponse.json();
+                        localStorage.setItem('permissions', JSON.stringify(permissions));
+                    }
+                    
+                    // Redirect to home
+                    window.location.href = '/index.html';
+                } else {
+                    const error = await response.json();
+                    showError(error.message || 'Login failed. Please check your credentials.');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('Connection error. Please try again.');
+            } finally {
+                setLoading(false);
+            }
+        });
+    </script>
+</body>
+</html>

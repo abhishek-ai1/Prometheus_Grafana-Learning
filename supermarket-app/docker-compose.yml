@@ -1,6 +1,51 @@
 version: '3.8'
 
 services:
+  # Auth Service
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    ports:
+      - "5003:5003"
+    environment:
+      - ENVIRONMENT=development
+      - SECRET_KEY=your-secret-key-change-in-production
+      - ALLOWED_ORIGINS=http://localhost:5002
+    volumes:
+      - ./services/auth-service/data:/app/data
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; r=urllib.request.urlopen('http://127.0.0.1:5003/health'); sys.exit(0) if r.getcode()==200 else sys.exit(1)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - supermarket-network
+    restart: unless-stopped
+
+  # Customer Management Service
+  customer-mgmt:
+    build:
+      context: ./services/customer-mgmt
+      dockerfile: Dockerfile
+    container_name: customer-mgmt
+    ports:
+      - "5004:5004"
+    environment:
+      - ENVIRONMENT=development
+      - AUTH_SERVICE_URL=http://auth-service:5003
+    depends_on:
+      - auth-service
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; r=urllib.request.urlopen('http://127.0.0.1:5004/health'); sys.exit(0) if r.getcode()==200 else sys.exit(1)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - supermarket-network
+    restart: unless-stopped
+
   # BFF Service
   bff-service:
     build:
@@ -11,8 +56,13 @@ services:
       - "5000:5000"
     environment:
       - ENVIRONMENT=development
+      - AUTH_SERVICE_URL=http://auth-service:5003
+      - CUSTOMER_MGMT_URL=http://customer-mgmt:5004
+      - ALLOWED_ORIGINS=http://localhost:5002
     depends_on:
       - core-service
+      - auth-service
+      - customer-mgmt
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request,sys; r=urllib.request.urlopen('http://127.0.0.1:5000/health'); sys.exit(0) if r.getcode()==200 else sys.exit(1)\""]
       interval: 10s
@@ -70,7 +120,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./k8s/monitoring/prometheus-config.yaml:/etc/prometheus/prometheus.yml:ro
+      - ./k8s/monitoring/prometheus-docker-compose.yaml:/etc/prometheus/prometheus.yml:ro
       - ./k8s/monitoring/alerts.rules.yml:/etc/prometheus/alerts.rules.yml:ro
       - prometheus-storage:/prometheus
     command:
@@ -110,8 +160,12 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_INSTALL_PLUGINS=grafana-piechart-panel
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
     volumes:
       - grafana-storage:/var/lib/grafana
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/supermarket-dashboard.json:/var/lib/grafana/dashboards/supermarket-dashboard.json
     networks:
       - supermarket-network
     restart: unless-stopped

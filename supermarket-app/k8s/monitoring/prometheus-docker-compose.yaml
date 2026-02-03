@@ -1,0 +1,46 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'supermarket-docker'
+    environment: 'development'
+
+scrape_configs:
+  # Prometheus server itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # BFF Service metrics
+  - job_name: 'bff-service'
+    static_configs:
+      - targets: ['bff-service:5000']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Core Service metrics
+  - job_name: 'core-service'
+    static_configs:
+      - targets: ['core-service:5001']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # UI Service metrics
+  - job_name: 'ui-service'
+    static_configs:
+      - targets: ['ui-service:5002']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Alertmanager
+  - job_name: 'alertmanager'
+    static_configs:
+      - targets: ['alertmanager:9093']
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
+rule_files:
+  - "/etc/prometheus/alerts.rules.yml"

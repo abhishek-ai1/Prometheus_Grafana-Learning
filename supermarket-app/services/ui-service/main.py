@@ -2,7 +2,7 @@
 UI Service
 Frontend server for the supermarket application
 """
-from flask import Flask, jsonify, send_from_directory, request
+from flask import Flask, jsonify, send_from_directory, request, Response
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 import time
 from datetime import datetime
@@ -41,6 +41,12 @@ def index():
     page_views.labels(page='home').inc()
     return send_from_directory('static', 'index.html')
 
+@app.route('/login', methods=['GET'])
+@app.route('/login.html', methods=['GET'])
+def login_page():
+    page_views.labels(page='login').inc()
+    return send_from_directory('static', 'login.html')
+
 @app.route('/products', methods=['GET'])
 def products_page():
     page_views.labels(page='products').inc()
@@ -74,6 +80,46 @@ def monitoring_page():
     """System monitoring and status dashboard"""
     page_views.labels(page='monitoring').inc()
     return send_from_directory('static', 'monitoring.html')
+
+
+@app.route('/api/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
+def proxy_api(path):
+    """Proxy API requests from the UI to the internal BFF service.
+
+    This allows the browser to call relative paths (same origin) and
+    the UI service will forward them to the `bff-service` inside Docker.
+    Useful for Codespaces / forwarded ports where `localhost` from the
+    browser does not map to service containers.
+    """
+    # Build target URL for internal BFF
+    target_url = f"http://bff-service:5000/api/{path}"
+
+    # Handle preflight
+    if request.method == 'OPTIONS':
+        resp = Response(status=200)
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        resp.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+        resp.headers['Access-Control-Allow-Methods'] = 'GET,POST,PUT,DELETE,OPTIONS'
+        return resp
+
+    try:
+        # Forward the request
+        resp = requests.request(
+            method=request.method,
+            url=target_url,
+            headers={key: value for key, value in request.headers if key != 'Host'},
+            params=request.args,
+            data=request.get_data(),
+            timeout=10
+        )
+
+        excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
+        headers = [(name, value) for (name, value) in resp.raw.headers.items() if name.lower() not in excluded_headers]
+
+        response = Response(resp.content, resp.status_code, headers)
+        return response
+    except Exception as e:
+        return jsonify({'error': str(e)}), 502
 
 @app.route('/config', methods=['GET'])
 def get_config():
