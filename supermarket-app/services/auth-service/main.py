@@ -276,6 +276,43 @@ def health():
 def metrics():
     return generate_latest(), 200, {'Content-Type': CONTENT_TYPE_LATEST}
 
+@app.route('/api/auth/register', methods=['POST'])
+def register():
+    """User registration endpoint (public)"""
+    data = request.get_json()
+    email = data.get('email')
+    name = data.get('name')
+    password = data.get('password')
+    
+    # Force role to be 'customer' for public registration
+    role = 'customer'
+    
+    if not email or not name or not password:
+        login_attempts.labels(status='failed_register').inc()
+        return jsonify({'error': 'Email, name, and password required'}), 400
+    
+    if get_user_by_email(email):
+        login_attempts.labels(status='failed_register_exists').inc()
+        return jsonify({'error': 'User already exists'}), 409
+    
+    # create in DB
+    try:
+        user_id = create_user_db(email, name, password, role)
+        # audit log
+        log_user_action(email, 'register_self', email, f'role={role}')
+
+        return jsonify({
+            'message': 'User registered successfully',
+            'user': {
+                'id': user_id,
+                'name': name,
+                'email': email,
+                'role': role
+            }
+        }), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/auth/login', methods=['POST'])
 def login():
     """User login endpoint"""
@@ -344,7 +381,7 @@ def get_permissions():
 @app.route('/', methods=['GET'])
 def root():
     """Simple root to aid browser checks"""
-    return jsonify({'service': 'auth-service', 'endpoints': ['/health', '/api/auth/login', '/api/auth/verify', '/api/auth/permissions']}), 200
+    return jsonify({'service': 'auth-service', 'endpoints': ['/health', '/api/auth/login', '/api/auth/register', '/api/auth/verify', '/api/auth/permissions']}), 200
 
 @app.route('/api/auth/refresh', methods=['POST'])
 @token_required

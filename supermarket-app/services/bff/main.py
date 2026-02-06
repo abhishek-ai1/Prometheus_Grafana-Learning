@@ -60,6 +60,16 @@ def auth_login():
     except Exception as e:
         return jsonify({'error': str(e)}), 503
 
+@app.route('/api/auth/register', methods=['POST'])
+def auth_register():
+    """Proxy registration request to auth service"""
+    try:
+        auth_service_calls.labels(endpoint='register').inc()
+        response = requests.post(f"{AUTH_SERVICE_URL}/api/auth/register", json=request.get_json(), timeout=5)
+        return jsonify(response.json()), response.status_code
+    except Exception as e:
+        return jsonify({'error': str(e)}), 503
+
 @app.route('/api/auth/verify', methods=['GET'])
 def auth_verify():
     """Proxy token verification to auth service"""

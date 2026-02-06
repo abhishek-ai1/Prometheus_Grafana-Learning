@@ -1,16 +1,5 @@
 # Terraform configuration for Supermarket App Kubernetes Infrastructure
 # This creates a complete K8s environment with Minikube on local machine
-#
-# Prerequisites:
-#   - Terraform installed
-#   - Docker installed
-#   - minikube installed
-#
-# Usage:
-#   terraform init
-#   terraform plan
-#   terraform apply
-#   terraform destroy (to clean up)
 
 terraform {
   required_version = ">= 1.0"
@@ -130,7 +119,336 @@ resource "kubernetes_config_map" "ui_service_config" {
 
   data = {
     ENVIRONMENT    = "production"
+    # UI connects to BFF
     API_BASE_URL   = "http://bff-service:5000"
+    BFF_SERVICE_URL = "http://bff-service:5000"
+  }
+}
+
+# ================= APPS =================
+
+# --- Auth Service ---
+resource "kubernetes_deployment" "auth_service" {
+  metadata {
+    name      = "auth-service"
+    namespace = kubernetes_namespace.supermarket.metadata[0].name
+    labels = { app = "auth-service" }
+  }
+  spec {
+    replicas = 1
+    selector { match_labels = { app = "auth-service" } }
+    template {
+      metadata {
+        labels = { app = "auth-service" }
+        annotations = {
+          "prometheus.io/scrape" = "true"
+          "prometheus.io/port"   = "5003"
+          "prometheus.io/path"   = "/metrics"
+        }
+      }
+      spec {
+        container {
+          image = "supermarket/auth-service:latest"
+          name  = "auth-service"
+          image_pull_policy = "IfNotPresent"
+          port { container_port = 5003 }
+          env_from {
+            config_map_ref { name = kubernetes_config_map.auth_service_config.metadata[0].name }
+          }
+          liveness_probe {
+            http_get { path = "/health"; port = 5003 }
+            initial_delay_seconds = 10
+            period_seconds        = 10
+          }
+        }
+      }
+    }
+  }
+}
+
+resource "kubernetes_service" "auth_service" {
+  metadata {
+    name      = "auth-service"
+    namespace = kubernetes_namespace.supermarket.metadata[0].name
+  }
+  spec {
+    selector = { app = "auth-service" }
+    port {
+      port        = 5003
+      target_port = 5003
+    }
+    type = "ClusterIP"
+  }
+}
+
+# --- Core Service ---
+resource "kubernetes_deployment" "core_service" {
+  metadata {
+    name      = "core-service"
+    namespace = kubernetes_namespace.supermarket.metadata[0].name
+    labels = { app = "core-service" }
+  }
+  spec {
+    replicas = 1
+    selector { match_labels = { app = "core-service" } }
+    template {
+      metadata {
+        labels = { app = "core-service" }
+        annotations = {
+          "prometheus.io/scrape" = "true"
+          "prometheus.io/port"   = "5001"
+          "prometheus.io/path"   = "/metrics"
+        }
+      }
+      spec {
+        container {
+          image = "supermarket/core-service:latest"
+          name  = "core-service"
+          image_pull_policy = "IfNotPresent"
+          port { container_port = 5001 }
+          env_from {
+            config_map_ref { name = kubernetes_config_map.core_service_config.metadata[0].name }
+          }
+          liveness_probe {
+            http_get { path = "/health"; port = 5001 }
+            initial_delay_seconds = 10
+            period_seconds        = 10
+          }
+        }
+      }
+    }
+  }
+}
+
+resource "kubernetes_service" "core_service" {
+  metadata {
+    name      = "core-service"
+    namespace = kubernetes_namespace.supermarket.metadata[0].name
+  }
+  spec {
+    selector = { app = "core-service" }
+    port {
+      port        = 5001
+      target_port = 5001
+    }
+    type = "ClusterIP"
+  }
+}
+
+# --- Customer Mgmt ---
+resource "kubernetes_deployment" "customer_mgmt" {
+  metadata {
+    name      = "customer-mgmt"
+    namespace = kubernetes_namespace.supermarket.metadata[0].name
+    labels = { app = "customer-mgmt" }
+  }
+  spec {
+    replicas = 1
+    selector { match_labels = { app = "customer-mgmt" } }
+    template {
+      metadata {
+        labels = { app = "customer-mgmt" }
+        annotations = {
+          "prometheus.io/scrape" = "true"
+          "prometheus.io/port"   = "5004"
+          "prometheus.io/path"   = "/metrics"
+        }
+      }
+      spec {
+        container {
+          image = "supermarket/customer-mgmt:latest"
+          name  = "customer-mgmt"
+          image_pull_policy = "IfNotPresent"
+          port { container_port = 5004 }
+          env_from {
+            config_map_ref { name = kubernetes_config_map.customer_mgmt_config.metadata[0].name }
+          }
+          liveness_probe {
+            http_get { path = "/health"; port = 5004 }
+            initial_delay_seconds = 10
+            period_seconds        = 10
+          }
+        }
+      }
+    }
+  }
+}
+
+resource "kubernetes_service" "customer_mgmt" {
+  metadata {
+    name      = "customer-mgmt"
+    namespace = kubernetes_namespace.supermarket.metadata[0].name
+  }
+  spec {
+    selector = { app = "customer-mgmt" }
+    port {
+      port        = 5004
+      target_port = 5004
+    }
+    type = "ClusterIP"
+  }
+}
+
+# --- BFF Service ---
+resource "kubernetes_deployment" "bff_service" {
+  metadata {
+    name      = "bff-service"
+    namespace = kubernetes_namespace.supermarket.metadata[0].name
+    labels = { app = "bff" }
+  }
+  spec {
+    replicas = 2
+    selector { match_labels = { app = "bff" } }
+    template {
+      metadata {
+        labels = { app = "bff" }
+        annotations = {
+          "prometheus.io/scrape" = "true"
+          "prometheus.io/port"   = "5000"
+          "prometheus.io/path"   = "/metrics"
+        }
+      }
+      spec {
+        container {
+          image = "supermarket/bff:latest"
+          name  = "bff"
+          image_pull_policy = "IfNotPresent"
+          port { container_port = 5000 }
+          env_from {
+            config_map_ref { name = kubernetes_config_map.bff_service_config.metadata[0].name }
+          }
+          liveness_probe {
+            http_get { path = "/health"; port = 5000 }
+            initial_delay_seconds = 10
+            period_seconds        = 10
+          }
+        }
+      }
+    }
+  }
+}
+
+resource "kubernetes_service" "bff_service" {
+  metadata {
+    name      = "bff-service"
+    namespace = kubernetes_namespace.supermarket.metadata[0].name
+  }
+  spec {
+    selector = { app = "bff" }
+    port {
+      port        = 5000
+      target_port = 5000
+    }
+    type = "LoadBalancer"
+  }
+}
+
+# --- UI Service ---
+resource "kubernetes_deployment" "ui_service" {
+  metadata {
+    name      = "ui-service"
+    namespace = kubernetes_namespace.supermarket.metadata[0].name
+    labels = { app = "ui-service" }
+  }
+  spec {
+    replicas = 1
+    selector { match_labels = { app = "ui-service" } }
+    template {
+      metadata {
+        labels = { app = "ui-service" }
+        annotations = {
+          "prometheus.io/scrape" = "true"
+          "prometheus.io/port"   = "5002"
+          "prometheus.io/path"   = "/metrics"
+        }
+      }
+      spec {
+        container {
+          image = "supermarket/ui-service:latest"
+          name  = "ui-service"
+          image_pull_policy = "IfNotPresent"
+          port { container_port = 5002 }
+          env_from {
+            config_map_ref { name = kubernetes_config_map.ui_service_config.metadata[0].name }
+          }
+          liveness_probe {
+            http_get { path = "/health"; port = 5002 }
+            initial_delay_seconds = 10
+            period_seconds        = 10
+          }
+        }
+      }
+    }
+  }
+}
+
+resource "kubernetes_service" "ui_service" {
+  metadata {
+    name      = "ui-service"
+    namespace = kubernetes_namespace.supermarket.metadata[0].name
+  }
+  spec {
+    selector = { app = "ui-service" }
+    type = "NodePort"
+    port {
+      port        = 5002
+      target_port = 5002
+      node_port   = var.ui_node_port
+    }
+  }
+}
+
+# Create ConfigMap for Prometheus
+resource "kubernetes_config_map" "prometheus_config" {
+  metadata {
+    name      = "prometheus-server-conf"
+    namespace = kubernetes_namespace.supermarket.metadata[0].name
+  }
+  
+  data = {
+    "prometheus.yml" = <<EOF
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'kubernetes-apiservers'
+    kubernetes_sd_configs:
+    - role: endpoints
+    scheme: https
+    tls_config:
+      ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+      action: keep
+      regex: default;kubernetes;https
+
+  - job_name: 'kubernetes-pods'
+    kubernetes_sd_configs:
+    - role: pod
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+      action: keep
+      regex: true
+    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+      action: replace
+      target_label: __metrics_path__
+      regex: (.+)
+    - source_labels: [__meta_kubernetes_address, __meta_kubernetes_pod_annotation_prometheus_io_port]
+      action: replace
+      regex: ([^:]+)(?::\d+)?;(\d+)
+      replacement: $1:$2
+      target_label: __address__
+    - action: labelmap
+      regex: __meta_kubernetes_pod_label_(.+)
+    - source_labels: [__meta_kubernetes_namespace]
+      action: replace
+      target_label: kubernetes_namespace
+    - source_labels: [__meta_kubernetes_pod_name]
+      action: replace
+      target_label: kubernetes_pod_name
+EOF
   }
 }
 
@@ -159,6 +477,11 @@ resource "kubernetes_cluster_role" "prometheus" {
     resources  = ["ingresses"]
     verbs      = ["get", "list", "watch"]
   }
+  
+  rule {
+    non_resource_urls = ["/metrics"]
+    verbs             = ["get"]
+  }
 }
 
 # Create ClusterRoleBinding for Prometheus
@@ -184,14 +507,4 @@ resource "kubernetes_cluster_role_binding" "prometheus" {
 output "namespace" {
   value       = kubernetes_namespace.supermarket.metadata[0].name
   description = "Kubernetes namespace"
-}
-
-output "kubeconfig_path" {
-  value       = var.kubeconfig_path
-  description = "Path to kubeconfig"
-}
-
-output "k8s_context" {
-  value       = var.k8s_context
-  description = "Kubernetes context"
 }

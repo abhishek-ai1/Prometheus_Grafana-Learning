@@ -47,6 +47,13 @@ def login_page():
     page_views.labels(page='login').inc()
     return send_from_directory('static', 'login.html')
 
+@app.route('/register', methods=['GET'])
+@app.route('/register.html', methods=['GET'])
+def register_page():
+    page_views.labels(page='register').inc()
+    return send_from_directory('static', 'register.html')
+
+
 @app.route('/products', methods=['GET'])
 def products_page():
     page_views.labels(page='products').inc()
@@ -92,7 +99,8 @@ def proxy_api(path):
     browser does not map to service containers.
     """
     # Build target URL for internal BFF
-    target_url = f"http://bff-service:5000/api/{path}"
+    # Use global BFF_SERVICE_URL variable (loaded from env) to support local testing
+    target_url = f"{BFF_SERVICE_URL}/api/{path}"
 
     # Handle preflight
     if request.method == 'OPTIONS':
