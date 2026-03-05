@@ -656,12 +656,18 @@ resource "helm_release" "argocd" {
   create_namespace = true
   # allow overriding chart values via variables if needed
 }
+# after ArgoCD is installed we create the namespace resource pointing back at this repo
+resource "kubernetes_manifest" "argocd_namespace" {
+  count = var.enable_argocd ? 1 : 0
+
+  manifest = yamldecode(file("${path.module}/../k8s/argocd/namespace.yaml"))
+}
 
 # after ArgoCD is installed we create the Application resource pointing back at this repo
 resource "kubernetes_manifest" "argocd_application" {
   count    = var.enable_argocd ? 1 : 0
   manifest = yamldecode(file("${path.module}/../k8s/argocd/application.yaml"))
-  depends_on = [helm_release.argocd]
+  depends_on = [helm_release.argocd,kubernetes_manifest.argocd_namespace]
 }
 
 # Outputs

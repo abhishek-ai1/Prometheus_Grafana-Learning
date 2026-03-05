@@ -1,12 +1,3 @@
----
-# ArgoCD Namespace
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: argocd
-
----
-# ArgoCD Application CRD (will be used after ArgoCD installation)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -17,7 +8,6 @@ spec:
   source:
     repoURL: https://github.com/abhishek-ai1/Prometheus_Grafana-Learning.git
     targetRevision: main
-    # deploy using the Helm chart under supermarket-app/helm/supermarket
     path: supermarket-app/helm/supermarket
     helm:
       values: |
