@@ -15,6 +15,7 @@ A full-featured supermarket management system built with microservices architect
 - ✅ **Grafana Dashboards**: Pre-built visualizations
 - ✅ **Kubernetes Ready**: Manifests for Minikube, Kind, EKS, GKE, AKS
 - ✅ **Terraform IaC**: Infrastructure as Code deployment
+- ✅ **GitOps with ArgoCD**: optional, can auto-install via `deploy.sh` or Terraform (`enable_argocd`)
 - ✅ **Docker Compose**: Local development stack
 - ✅ **Professional UI**: Modern, responsive design with real-time monitoring dashboard
 
@@ -68,6 +69,9 @@ chmod +x run-local.sh
 | Grafana | http://localhost:3000 | admin / admin |
 
 ### Option 2: Windows PowerShell (Local Python)
+
+> ⚙️ **GitOps tip**: set `ARGOCD_ENABLED=true` in your environment before running any deployment option (1‑4) and the script will install ArgoCD and the application automatically. You can also enable the same behaviour in Terraform by passing `-var='enable_argocd=true'`.
+
 
 ```powershell
 cd supermarket-app

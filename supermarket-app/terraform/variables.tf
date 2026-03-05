@@ -71,7 +71,7 @@ variable "enable_grafana" {
 }
 
 variable "enable_argocd" {
-  description = "Enable ArgoCD deployment"
+  description = "Enable ArgoCD deployment and application resources via Terraform"  
   type        = bool
   default     = true
 }

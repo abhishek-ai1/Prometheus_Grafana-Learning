@@ -128,6 +128,12 @@ helm upgrade --install supermarket ./helm/supermarket \
 The `deploy.sh` helper also exposes this as option 5 in its menu.
 
 # 4. Install ArgoCD (optional)
+
+> **automation tip**: you can skip the manual commands below by running the helper script with
+> `ARGOCD_ENABLED=true` – it will create the namespace, install ArgoCD, and apply the
+> `k8s/argocd/application.yaml` automatically. When using Terraform, pass
+> `-var='enable_argocd=true'` to achieve the same result.
+
 kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
@@ -185,8 +191,8 @@ The provided Terraform configuration now includes a `docker_registry` variable; 
 ```bash
 cd supermarket-app/terraform
 terraform init
-terraform plan -var='docker_registry=mydockerhubuser' [-var='use_helm=true']
-terraform apply -var='docker_registry=mydockerhubuser' [-var='use_helm=true'] -auto-approve
+terraform plan -var='docker_registry=mydockerhubuser' [-var='use_helm=true'] [-var='enable_argocd=true']
+terraform apply -var='docker_registry=mydockerhubuser' [-var='use_helm=true'] [-var='enable_argocd=true'] -auto-approve
 
 By default the raw YAML manifests under `k8s/` are applied.  Set `use_helm=true` to have Terraform install the Helm chart instead.  (You can test both sequentially by first applying with helm disabled, then destroying and reapplying with it enabled.)
 ```
@@ -299,6 +305,12 @@ Customer:
 ```bash
 kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+```
+
+> **automation:** set `ARGOCD_ENABLED=true` and run `./deploy.sh` to perform the
+default installation and application deployment for you. In Terraform, use
+`-var='enable_argocd=true'`.
+
 
 # Access ArgoCD
 kubectl port-forward -n argocd svc/argocd-server 8080:443

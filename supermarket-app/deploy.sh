@@ -12,6 +12,18 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# global flags (can be overridden with environment variables)
+# set ARGOCD_ENABLED=true before running to have ArgoCD installed automatically
+ARGOCD_ENABLED=${ARGOCD_ENABLED:-false}
+
+# helper invoked by the various deployment paths
+maybe_deploy_argocd() {
+    if [ "$ARGOCD_ENABLED" = "true" ]; then
+        print_header "Auto-installing ArgoCD as requested"
+        deploy_argocd
+    fi
+}
+
 # Functions
 print_header() {
     echo -e "\n${BLUE}========================================${NC}"
@@ -50,6 +62,8 @@ show_menu() {
     echo "6. ArgoCD (GitOps Deployment)"
     echo "7. Clean Up & Stop Services"
     echo "8. View Service Status"
+    echo ""
+    echo "[hint] export ARGOCD_ENABLED=true to automatically install ArgoCD after any of options 1–5"
     echo "0. Exit"
     echo ""
 }
@@ -118,6 +132,7 @@ deploy_minikube() {
     echo "  • kubectl port-forward -n supermarket svc/prometheus 9090:9090"
     echo "  • kubectl port-forward -n supermarket svc/grafana 3000:3000"
     echo ""
+    maybe_deploy_argocd
 }
 
 # Helm Deployment
@@ -144,6 +159,7 @@ deploy_helm() {
     print_success "Helm deployment complete!"
     echo "You can run 'kubectl get svc -n supermarket' to verify."
     echo "Use port-forward if needed (same as other options)."
+    maybe_deploy_argocd
 }
 
 # Kind Deployment
@@ -184,6 +200,7 @@ deploy_kind() {
     echo "  • kubectl port-forward -n supermarket svc/prometheus 9090:9090"
     echo "  • kubectl port-forward -n supermarket svc/grafana 3000:3000"
     echo ""
+    maybe_deploy_argocd
 }
 
 # Terraform Deployment
@@ -228,6 +245,7 @@ deploy_terraform() {
     
     print_success "Terraform deployment complete!"
     echo ""
+    maybe_deploy_argocd
 }
 
 # ArgoCD Deployment
