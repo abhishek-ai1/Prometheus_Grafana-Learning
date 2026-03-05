@@ -106,40 +106,61 @@ jobs:
 
       - name: Build and load Docker images
         run: |
-          # Build images
+          # Build images with correct naming convention
           docker build -t supermarket-app-auth-service:latest ./supermarket-app/services/auth-service
           docker build -t supermarket-app-bff-service:latest ./supermarket-app/services/bff
           docker build -t supermarket-app-core-service:latest ./supermarket-app/services/core-service
           docker build -t supermarket-app-customer-mgmt:latest ./supermarket-app/services/customer-mgmt
           docker build -t supermarket-app-ui-service:latest ./supermarket-app/services/ui-service
-          
-          # Load into Kind
-          kind load docker-image supermarket-app-auth-service:latest --name chart-testing
-          kind load docker-image supermarket-app-bff-service:latest --name chart-testing
-          kind load docker-image supermarket-app-core-service:latest --name chart-testing
-          kind load docker-image supermarket-app-customer-mgmt:latest --name chart-testing
-          kind load docker-image supermarket-app-ui-service:latest --name chart-testing
 
-      - name: Deploy application manifests with Helm
+          # Load into Kind cluster
+          kind load docker-image supermarket-app-auth-service:latest
+          kind load docker-image supermarket-app-bff-service:latest
+          kind load docker-image supermarket-app-core-service:latest
+          kind load docker-image supermarket-app-customer-mgmt:latest
+          kind load docker-image supermarket-app-ui-service:latest
+
+      - name: Deploy application with Helm
         run: |
           kubectl create namespace supermarket || true
           helm upgrade --install supermarket ./supermarket-app/helm/supermarket \
-            --namespace supermarket --set registry="" --set appName=supermarket-app --set imageTag=latest
+            --namespace supermarket \
+            --set registry="" \
+            --set appName=supermarket-app \
+            --set imageTag=latest \
+            --wait \
+            --timeout=300s
 
-      - name: Install ArgoCD via Helm
+      - name: Verify deployment
+        run: |
+          # Wait for all deployments to be ready
+          kubectl wait --for=condition=available --timeout=300s deployment/auth-service -n supermarket
+          kubectl wait --for=condition=available --timeout=300s deployment/bff-service -n supermarket
+          kubectl wait --for=condition=available --timeout=300s deployment/core-service -n supermarket
+          kubectl wait --for=condition=available --timeout=300s deployment/customer-mgmt -n supermarket
+          kubectl wait --for=condition=available --timeout=300s deployment/ui-service -n supermarket
+
+          # Check pod status
+          kubectl get pods -n supermarket
+
+      - name: Install ArgoCD
         run: |
           kubectl create namespace argocd || true
           helm repo add argo https://argoproj.github.io/argo-helm
           helm repo update
-          helm upgrade --install argocd argo/argo-cd --namespace argocd --create-namespace
-          # wait for server
-          kubectl wait deployment/argocd-server -n argocd --for=condition=Available --timeout=120s
+          helm upgrade --install argocd argo/argo-cd \
+            --namespace argocd \
+            --create-namespace \
+            --set server.service.type=ClusterIP \
+            --wait \
+            --timeout=300s
 
-      - name: Apply ArgoCD application resource
+      - name: Test ArgoCD application creation
         run: |
+          # Apply ArgoCD application (will sync from Git repo)
           kubectl apply -f supermarket-app/k8s/argocd/application.yaml
 
-      - name: Verify ArgoCD application status
-        run: |
-          kubectl -n argocd wait --for=condition=Synced application/supermarket-app --timeout=120s || true
-          kubectl -n argocd get application supermarket-app
+          # Check that application was created
+          kubectl -n argocd get application supermarket-app -o yaml
+
+          # Note: Full sync may fail in CI due to image availability, but creation should work
