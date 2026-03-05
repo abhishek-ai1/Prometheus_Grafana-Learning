@@ -75,11 +75,13 @@ jobs:
 
       - name: Install kubeval
         run: |
-          curl -sLo kubeval https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64 && chmod +x kubeval && mv kubeval /usr/local/bin/
+          curl -sLo kubeval https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64
+          chmod +x kubeval
+          sudo mv kubeval /usr/local/bin/
 
       - name: Validate YAML manifests
         run: |
-          find supermarket-app/k8s -name '*.yaml' -exec kubeval {} \\;
+          find supermarket-app/k8s -name "*.yaml" -exec kubeval {} \;
 
   argo-integration:
     runs-on: ubuntu-latest
