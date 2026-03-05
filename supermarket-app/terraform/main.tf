@@ -162,7 +162,10 @@ resource "kubernetes_deployment" "auth_service" {
             config_map_ref { name = kubernetes_config_map.auth_service_config.metadata[0].name }
           }
           liveness_probe {
-            http_get { path = "/health"; port = 5003 }
+            http_get {
+              path = "/health"
+              port = 5003
+            }
             initial_delay_seconds = 10
             period_seconds        = 10
           }
@@ -216,7 +219,10 @@ resource "kubernetes_deployment" "core_service" {
             config_map_ref { name = kubernetes_config_map.core_service_config.metadata[0].name }
           }
           liveness_probe {
-            http_get { path = "/health"; port = 5001 }
+            http_get {
+              path = "/health"
+              port = 5001
+            }
             initial_delay_seconds = 10
             period_seconds        = 10
           }
@@ -270,7 +276,10 @@ resource "kubernetes_deployment" "customer_mgmt" {
             config_map_ref { name = kubernetes_config_map.customer_mgmt_config.metadata[0].name }
           }
           liveness_probe {
-            http_get { path = "/health"; port = 5004 }
+            http_get {
+              path = "/health"
+              port = 5004
+            }
             initial_delay_seconds = 10
             period_seconds        = 10
           }
@@ -324,7 +333,10 @@ resource "kubernetes_deployment" "bff_service" {
             config_map_ref { name = kubernetes_config_map.bff_service_config.metadata[0].name }
           }
           liveness_probe {
-            http_get { path = "/health"; port = 5000 }
+            http_get {
+              path = "/health"
+              port = 5000
+            }
             initial_delay_seconds = 10
             period_seconds        = 10
           }
@@ -378,7 +390,10 @@ resource "kubernetes_deployment" "ui_service" {
             config_map_ref { name = kubernetes_config_map.ui_service_config.metadata[0].name }
           }
           liveness_probe {
-            http_get { path = "/health"; port = 5002 }
+            http_get {
+              path = "/health"
+              port = 5002
+            }
             initial_delay_seconds = 10
             period_seconds        = 10
           }
