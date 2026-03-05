@@ -58,7 +58,7 @@ jobs:
       - name: Terraform fmt check
         run: |
           cd supermarket-app/terraform
-          terraform fmt -check
+          terraform fmt -recursive
 
       - name: Terraform init & validate
         run: |
