@@ -538,7 +538,7 @@ resource "kubernetes_cluster_role" "prometheus" {
     resources  = ["ingresses"]
     verbs      = ["get", "list", "watch"]
   }
-  
+
   rule {
     non_resource_urls = ["/metrics"]
     verbs             = ["get"]
