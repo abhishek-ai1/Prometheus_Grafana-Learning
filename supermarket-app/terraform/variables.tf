@@ -75,3 +75,21 @@ variable "enable_argocd" {
   type        = bool
   default     = true
 }
+
+variable "ui_node_port" {
+  description = "NodePort for UI Service"
+  type        = number
+  default     = 30002
+}
+
+variable "grafana_node_port" {
+  description = "NodePort for Grafana Service"
+  type        = number
+  default     = 30000
+}
+
+variable "prometheus_node_port" {
+  description = "NodePort for Prometheus Service"
+  type        = number
+  default     = 30090
+}

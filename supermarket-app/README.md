@@ -1,10 +1,26 @@
-# Supermarket Microservices Application
+# Prometheus_Grafana-Learning
 
-A production-ready supermarket management system built with microservices architecture, Kubernetes orchestration, and comprehensive monitoring using Prometheus and Grafana.
+Learning **Prometheus**, **Grafana-stack**, and **Monitoring** through a production-ready **Supermarket Microservices Application**.
 
-## Architecture Overview
+---
 
-### Microservices
+## 🎯 Overview
+
+A full-featured supermarket management system built with microservices architecture, Kubernetes orchestration, and comprehensive monitoring using Prometheus and Grafana.
+
+### Key Features
+- ✅ **5 Microservices**: Auth, BFF, Core, Customer Management, UI
+- ✅ **Full RBAC System**: Role-based access control with JWT
+- ✅ **Prometheus Monitoring**: Metrics collection with 15s scrape interval
+- ✅ **Grafana Dashboards**: Pre-built visualizations
+- ✅ **Kubernetes Ready**: Manifests for Minikube, Kind, EKS, GKE, AKS
+- ✅ **Terraform IaC**: Infrastructure as Code deployment
+- ✅ **Docker Compose**: Local development stack
+- ✅ **Professional UI**: Modern, responsive design with real-time monitoring dashboard
+
+---
+
+## 🏗️ Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -15,332 +31,120 @@ A production-ready supermarket management system built with microservices archit
 ┌──────────────────▼──────────────────────────────────────────┐
 │                 BFF Service (5000)                           │
 │         Backend for Frontend - API Gateway                   │
-└──────────────────┬──────────────────────────────────────────┘
-                   │
-┌──────────────────▼──────────────────────────────────────────┐
-│               Core Service (5001)                            │
-│    Business Logic - Products, Orders, Inventory              │
-└─────────────────────────────────────────────────────────────┘
-```
+└───────┬───────────────┬──────────────────┬──────────────────┘
+        │               │                  │
+┌───────▼───────┐ ┌─────▼─────┐ ┌──────────▼──────────┐
+│ Auth Service  │ │   Core    │ │ Customer Management │
+│    (5003)     │ │  (5001)   │ │       (5004)        │
+└───────────────┘ └───────────┘ └─────────────────────┘
 
-### Monitoring Stack
-
-```
+Monitoring Stack:
 ┌──────────────────────────────────────────────────────────┐
-│              Microservices (with metrics)                 │
-│        • BFF Service (/metrics on :5000)                 │
-│        • Core Service (/metrics on :5001)               │
-│        • UI Service (/metrics on :5002)                 │
-└──────────────────┬───────────────────────────────────────┘
-                   │
-        ┌──────────┴───────────┐
-        │                      │
-┌───────▼──────┐      ┌───────▼──────┐
-│  Prometheus  │      │   Grafana    │
-│   (9090)     │      │   (3000)     │
-└──────────────┘      └──────────────┘
+│  Prometheus (9090)  ←──────  All Services /metrics       │
+│        ↓                                                 │
+│  Grafana (3000)  ─────────  Dashboards & Visualization   │
+└──────────────────────────────────────────────────────────┘
 ```
 
-## Project Structure
+---
 
-```
-supermarket-app/
-├── services/
-│   ├── bff/                    # Backend for Frontend
-│   │   ├── main.py
-│   │   ├── requirements.txt
-│   │   └── Dockerfile
-│   ├── core-service/           # Core Business Logic
-│   │   ├── main.py
-│   │   ├── requirements.txt
-│   │   └── Dockerfile
-│   └── ui-service/             # Frontend UI
-│       ├── main.py
-│       ├── requirements.txt
-│       ├── Dockerfile
-│       └── static/
-│           ├── index.html
-│           ├── products.html
-│           └── orders.html
-├── k8s/
-│   ├── services/
-│   │   ├── bff.yaml           # BFF Deployment & Service
-│   │   ├── core-service.yaml  # Core Service Deployment & Service
-│   │   └── ui-service.yaml    # UI Service Deployment & Service
-│   ├── monitoring/
-│   │   ├── prometheus.yaml    # Prometheus Deployment
-│   │   └── grafana.yaml       # Grafana Deployment
-│   └── dashboard/
-│       └── dashboard-user.yaml # Kubernetes Dashboard Setup
-├── docker-compose.yml          # Local development setup
-├── build-images.sh            # Build Docker images
-├── deploy-k8s.sh              # Deploy to Kubernetes
-├── run-local.sh               # Start local stack
-└── stop-local.sh              # Stop local stack
-```
+## 🚀 Quick Start
 
-## Features
-
-### Microservices
-- **BFF Service**: API gateway pattern, coordinates between UI and Core services
-- **Core Service**: Business logic for products, inventory, and orders
-- **UI Service**: Web frontend with product browsing and order management
-
-### Monitoring
-- **Prometheus**: Time-series metrics collection from all services
-- **Grafana**: Dashboard and visualization platform
-- **Built-in Metrics**:
-  - Request counts and rates
-  - Request latency/duration
-  - Orders created counter
-  - Products queried counter
-  - Service health endpoints
-
-### Kubernetes
-- Service discovery and orchestration
-- Auto-scaling capabilities (configurable replicas)
-- Health checks (liveness & readiness probes)
-- Load balancing
-- Resource limits and requests
-- RBAC for monitoring components
-
-### Kubernetes Dashboard
-- Cluster management UI
-- Pod and service monitoring
-- Resource visualization
-- Admin user setup
-
-## Prerequisites
-
-### For Local Development (Docker Compose)
-- Docker (version 20.10+)
-- Docker Compose (version 1.29+)
-
-### For Kubernetes Deployment
-- Kubernetes cluster (v1.19+)
-- kubectl CLI tool
-- Docker registry access (or local Docker daemon for k3s/minikube)
-
-## Quick Start - Local Development
-
-### 1. Clone and Navigate
+### Option 1: Local Docker Compose (2 Minutes)
 
 ```bash
 cd supermarket-app
-```
-
-### 2. Run Local Stack
-
-```bash
 chmod +x run-local.sh
 ./run-local.sh
 ```
 
-> **Helm charts** are available under `helm/supermarket` if you prefer to deploy via Helm.
-
-This will:
-- Build all Docker images (use `REGISTRY` and `PUSH=true` to tag & upload to a registry)
-- Start all services with Docker Compose
-- Initialize Prometheus and Grafana
-
-You can build‑and‑upload using the helper script directly:
-```bash
-# set your Docker Hub/registry user and enable push (runs once)
-REGISTRY=docker.io/myuser PUSH=true ./build-images.sh
-
-# on subsequent invocations avoid rebuilding by skipping:
-REGISTRY=docker.io/myuser PUSH=true SKIP_BUILD=true ./deploy.sh 2    # Minikube
-REGISTRY=docker.io/myuser PUSH=true SKIP_BUILD=true ./deploy.sh 4    # Terraform
-```
-### 3. Access Services
-
+**Access Services:**
 | Service | URL | Credentials |
 |---------|-----|-------------|
-| UI | http://localhost:5002 | - |
+| Web UI | http://localhost:5002 | - |
 | BFF API | http://localhost:5000 | - |
 | Core API | http://localhost:5001 | - |
 | Prometheus | http://localhost:9090 | - |
 | Grafana | http://localhost:3000 | admin / admin |
 
-### 4. Test the Application
+### Option 2: Windows PowerShell (Local Python)
 
-#### Get Products
-```bash
-curl http://localhost:5000/api/products
+```powershell
+cd supermarket-app
+.\start_app.ps1
 ```
 
-#### Create Order
-```bash
-curl -X POST http://localhost:5000/api/orders \
-  -H "Content-Type: application/json" \
-  -d '{
-    "items": [
-      {"id": "1", "name": "Milk", "price": 3.99, "quantity": 2},
-      {"id": "4", "name": "Apples", "price": 1.99, "quantity": 3}
-    ]
-  }'
-```
-
-#### Check Service Health
-```bash
-curl http://localhost:5000/health
-curl http://localhost:5001/health
-curl http://localhost:5002/health
-```
-
-#### View Metrics
-```bash
-curl http://localhost:5000/metrics  # BFF metrics
-curl http://localhost:5001/metrics  # Core Service metrics
-curl http://localhost:5002/metrics  # UI Service metrics
-```
-
-### 5. Stop Local Stack
+### Option 3: Kubernetes (5-10 Minutes)
 
 ```bash
-chmod +x stop-local.sh
-./stop-local.sh
-```
-
-Or use Docker Compose directly:
-```bash
-docker-compose down
-```
-
-## Kubernetes Deployment
-
-### 1. Build and Push Images
-
-For local Kubernetes (minikube/k3s):
-```bash
-chmod +x build-images.sh
+cd supermarket-app
+chmod +x build-images.sh deploy-k8s.sh
 ./build-images.sh
-```
-
-For remote registry:
-```bash
-docker build -t your-registry/supermarket/bff:latest ./services/bff
-docker build -t your-registry/supermarket/core-service:latest ./services/core-service
-docker build -t your-registry/supermarket/ui-service:latest ./services/ui-service
-docker push your-registry/supermarket/bff:latest
-docker push your-registry/supermarket/core-service:latest
-docker push your-registry/supermarket/ui-service:latest
-```
-
-Update image references in `k8s/services/*.yaml` files.
-
-### 2. Deploy to Kubernetes
-
-```bash
-chmod +x deploy-k8s.sh
 ./deploy-k8s.sh
 ```
 
-This will:
-- Create `monitoring` namespace for Prometheus and Grafana
-- Create `supermarket` namespace for application services
-- Create `kubernetes-dashboard` namespace for the dashboard
-- Deploy all services with proper configurations
-
-### 3. Verify Deployment
-
+**Port Forwarding:**
 ```bash
-# Check all namespaces
-kubectl get ns
-
-# Check supermarket services
-kubectl get pods,svc -n supermarket
-
-# Check monitoring stack
-kubectl get pods,svc -n monitoring
-
-# Check dashboard
-kubectl get svc -n kubernetes-dashboard
-```
-
-### 4. Access Services in Kubernetes
-
-#### Port Forward to Prometheus
-```bash
-kubectl port-forward -n monitoring svc/prometheus 9090:9090
-# Access: http://localhost:9090
-```
-
-#### Port Forward to Grafana
-```bash
+kubectl port-forward -n supermarket svc/ui-service 5002:5002
 kubectl port-forward -n monitoring svc/grafana 3000:3000
-# Access: http://localhost:3000 (admin/admin)
+kubectl port-forward -n monitoring svc/prometheus 9090:9090
 ```
 
-#### Get Kubernetes Dashboard Token
+### Option 4: Terraform
+
 ```bash
-kubectl -n kubernetes-dashboard create token admin-user
+cd supermarket-app/terraform
+terraform init
+terraform plan
+terraform apply
 ```
 
-#### Port Forward to Dashboard
-```bash
-kubectl -n kubernetes-dashboard port-forward svc/kubernetes-dashboard 8443:443
-# Access: https://localhost:8443
+---
+
+## 📂 Project Structure
+
+```
+supermarket-app/
+├── services/
+│   ├── auth-service/        # JWT Authentication & RBAC (5003)
+│   ├── bff/                 # API Gateway (5000)
+│   ├── core-service/        # Products, Orders, Inventory (5001)
+│   ├── customer-mgmt/       # Customer Profiles & Loyalty (5004)
+│   └── ui-service/          # Frontend Web App (5002)
+├── k8s/
+│   ├── services/            # K8s Deployments & Services
+│   ├── monitoring/          # Prometheus & Grafana
+│   └── dashboard/           # Kubernetes Dashboard
+├── terraform/               # Infrastructure as Code
+├── grafana/                 # Dashboards & Datasources
+├── docker-compose.yml       # Local development
+├── build-images.sh          # Build Docker images
+├── deploy-k8s.sh            # Deploy to Kubernetes
+├── run-local.sh / start_app.ps1  # Start local stack
+└── stop-local.sh            # Stop local stack
 ```
 
-#### Get LoadBalancer IPs
-```bash
-kubectl get svc -n supermarket
-kubectl get svc -n monitoring
-```
+---
 
-## Monitoring & Observability
+## 🔐 Authentication & RBAC
 
-### Prometheus
+### Default Users
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | admin@supermarket.com | admin123 |
+| Customer | customer@supermarket.com | customer123 |
 
-Prometheus automatically discovers and scrapes metrics from services via Kubernetes service discovery.
+### Roles
+- **Admin**: Full access to all tabs, user management, product upload
+- **Customer**: Products, Cart, Orders, Profile only
 
-**Scrape Targets:**
-- BFF Service: `/metrics` on port 5000
-- Core Service: `/metrics` on port 5001
-- UI Service: `/metrics` on port 5002
-- Kubernetes API Server, Nodes, Pods
+---
 
-**Key Metrics:**
-
-```promql
-# BFF Service
-bff_requests_total
-bff_request_duration_seconds
-bff_core_service_calls_total
-
-# Core Service
-core_service_requests_total
-core_service_request_duration_seconds
-orders_created_total
-products_queried_total
-
-# UI Service
-ui_service_requests_total
-ui_service_request_duration_seconds
-page_views_total
-```
-
-### Grafana
-
-Pre-configured dashboards available:
-- **Supermarket System Overview**: High-level metrics across all services
-- Can add custom dashboards for specific services
-
-**Default Datasource:** Prometheus (http://prometheus:9090)
-
-**Add Custom Dashboards:**
-1. Log in to Grafana (admin/admin)
-2. Go to Dashboards → New → Create
-3. Select Prometheus as datasource
-4. Add panels with desired metrics
-
-## Service APIs
+## 📊 API Reference
 
 ### BFF Service (http://localhost:5000)
-
 ```
-GET  /health              - Service health status
+GET  /health              - Health check
 GET  /metrics             - Prometheus metrics
 GET  /api/products        - List all products
 GET  /api/products/{id}   - Get product details
@@ -349,214 +153,164 @@ GET  /api/orders/{id}     - Get order details
 ```
 
 ### Core Service (http://localhost:5001)
-
 ```
-GET  /health              - Service health status
+GET  /health              - Health check
 GET  /metrics             - Prometheus metrics
 GET  /products            - List all products
-GET  /products/{id}       - Get product details
-POST /products            - Create new product
-POST /orders              - Create new order
-GET  /orders/{id}         - Get order details
+POST /products            - Create product
+POST /orders              - Create order
 PUT  /orders/{id}/status  - Update order status
 ```
 
-### UI Service (http://localhost:5002)
-
-```
-GET  /health              - Service health status
-GET  /metrics             - Prometheus metrics
-GET  /                    - Home page
-GET  /products            - Products page
-GET  /orders              - Orders page
-GET  /config              - UI configuration
-```
-
-## Environment Variables
-
-### BFF Service
-- `ENVIRONMENT`: Deployment environment (development/production)
-
-### Core Service
-- `ENVIRONMENT`: Deployment environment (development/production)
-
-### UI Service
-- `ENVIRONMENT`: Deployment environment (development/production)
-- `API_BASE_URL`: Backend API base URL (default: http://bff-service:5000)
-
-### Prometheus
-- Configured via ConfigMap in Kubernetes
-- Scrape interval: 15 seconds
-- Evaluation interval: 15 seconds
-- Retention: 30 days
-
-### Grafana
-- `GF_SECURITY_ADMIN_PASSWORD`: Admin password (default: admin)
-- `GF_USERS_ALLOW_SIGN_UP`: Allow user signups (default: false)
-- `GF_INSTALL_PLUGINS`: Additional plugins to install
-
-## Scaling and Performance
-
-### Horizontal Scaling
-
-Adjust replicas in Kubernetes manifests:
-
-```yaml
-spec:
-  replicas: 3  # Increase from 2
-```
-
-Apply changes:
+### Example API Calls
 ```bash
-kubectl apply -f k8s/services/bff.yaml
-kubectl apply -f k8s/services/core-service.yaml
-kubectl apply -f k8s/services/ui-service.yaml
+# Get products
+curl http://localhost:5000/api/products
+
+# Create order
+curl -X POST http://localhost:5000/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{"items": [{"id": "1", "name": "Milk", "price": 3.99, "quantity": 2}]}'
 ```
 
-### Resource Limits
+---
 
-Current configuration:
-- **Requests**: 100m CPU, 128Mi Memory
-- **Limits**: 500m CPU, 256Mi Memory
+## 📈 Monitoring & Observability
 
-Adjust in `k8s/services/*.yaml` based on load testing:
+### Prometheus Metrics
+```promql
+# Request rate
+rate(bff_requests_total[5m])
 
-```yaml
-resources:
-  requests:
-    memory: "256Mi"
-    cpu: "200m"
-  limits:
-    memory: "512Mi"
-    cpu: "1000m"
+# Average latency
+avg(bff_request_duration_seconds) * 1000
+
+# Orders per minute
+sum(rate(orders_created_total[1m])) * 60
+
+# Error rate
+rate(bff_requests_total{status=~"5.."}[5m])
+
+# 95th percentile latency
+histogram_quantile(0.95, rate(bff_request_duration_seconds_bucket[5m]))
 ```
 
-## Health Checks
+### Grafana Dashboards
+1. Login at http://localhost:3000 (admin/admin)
+2. Go to Dashboards → Browse
+3. Select "Supermarket System Overview"
 
-All services include health check endpoints:
+### Custom Dashboard
+1. Click **+** → **Dashboard**
+2. **Add Panel** → Select Prometheus datasource
+3. Write PromQL query → **Save**
 
+---
+
+## ☸️ Kubernetes Dashboard
+
+### Get Admin Token
 ```bash
-curl http://bff-service:5000/health
-curl http://core-service:5001/health
-curl http://ui-service:5002/health
+kubectl -n kubernetes-dashboard create token admin-user
 ```
 
-Response format:
-```json
-{
-  "status": "healthy",
-  "service": "service-name",
-  "timestamp": "2024-01-15T10:30:00.000000"
-}
-```
-
-## Troubleshooting
-
-### Services Not Starting (Docker Compose)
-
+### Access Dashboard
 ```bash
-# Check logs
+kubectl -n kubernetes-dashboard port-forward svc/kubernetes-dashboard 8443:443
+# Open: https://localhost:8443
+```
+
+---
+
+## 🛠️ Troubleshooting
+
+### Docker Compose
+```bash
 docker-compose logs -f service-name
-
-# Check container status
 docker-compose ps
-
-# Restart services
 docker-compose restart
 ```
 
-### Services Not Starting (Kubernetes)
-
+### Kubernetes
 ```bash
-# Check pod status
 kubectl get pods -n supermarket
 kubectl describe pod <pod-name> -n supermarket
-
-# View pod logs
 kubectl logs <pod-name> -n supermarket
-
-# Check events
 kubectl get events -n supermarket
 ```
 
-### Prometheus Not Collecting Metrics
-
+### Prometheus Not Collecting
 ```bash
-# Verify service discovery targets
-kubectl port-forward -n monitoring svc/prometheus 9090:9090
-# Visit http://localhost:9090/targets
+# Check targets
+http://localhost:9090/targets
 
-# Check ServiceMonitor/annotations on pods
-kubectl describe pod <pod-name> -n supermarket
+# Verify metrics endpoint
+curl http://localhost:5000/metrics
 ```
 
-### Grafana Connection Issues
+---
 
-```bash
-# Verify Prometheus service is running
-kubectl get svc -n monitoring
+## 🌐 UI Pages
 
-# Check Grafana datasource configuration
-# Login to Grafana → Configuration → Data Sources
-# Test connection to Prometheus
-```
+| Page | URL | Description |
+|------|-----|-------------|
+| Home | `/` | Welcome page with features |
+| Products | `/products` | Browse & filter products |
+| Cart | `/cart` | Shopping cart |
+| Orders | `/orders` | Order history |
+| Inventory | `/inventory` | Stock management |
+| Admin | `/admin` | Product upload, statistics |
+| **Monitoring** ⭐ | `/monitoring` | Real-time system dashboard |
 
-## Production Considerations
+---
 
-1. **Image Registry**: Push images to private registry
-2. **Secrets Management**: Use Kubernetes Secrets for sensitive data
-3. **Persistent Storage**: Add PVC for Prometheus and Grafana data
-4. **Backup**: Implement backup strategy for metrics and dashboards
-5. **Alerting**: Configure AlertManager with notification channels
-6. **Logging**: Integrate with ELK or other logging stack
-7. **RBAC**: Configure fine-grained RBAC policies
-8. **Network Policy**: Implement network policies
-9. **TLS**: Enable HTTPS for all services
-10. **Ingress**: Use Ingress controller for external access
+## 🚢 Production Deployment
 
-## Development
+### Cloud Platforms Supported
+- **AWS EKS**
+- **Google GKE**
+- **Azure AKS**
+- **Minikube/Kind** (Local)
 
-### Adding New Metrics
+### Production Checklist
+1. Push images to private registry
+2. Use Kubernetes Secrets for sensitive data
+3. Add PVC for Prometheus and Grafana
+4. Configure AlertManager
+5. Enable TLS/HTTPS
+6. Set up Ingress controller
+7. Configure HPA (Horizontal Pod Autoscaler)
+8. Implement network policies
 
-Example in Python (Flask):
+---
 
-```python
-from prometheus_client import Counter, Histogram
-
-# Define metrics
-my_counter = Counter('my_counter_total', 'Description', ['label1'])
-my_histogram = Histogram('my_duration_seconds', 'Description')
-
-# Use metrics
-my_counter.labels(label1='value').inc()
-with my_histogram.time():
-    # Your code here
-    pass
-```
-
-### Adding New Dashboard in Grafana
-
-1. Click "+" → Create Dashboard
-2. Add Panel
-3. Select Prometheus datasource
-4. Write PromQL query
-5. Configure visualization
-6. Save dashboard
-
-### Updating Service Code
-
-1. Modify service code in `services/<service>/main.py`
-2. Rebuild image: `docker build -t supermarket/<service>:latest ./services/<service>`
-3. Update Kubernetes deployment or restart Docker container
-
-## Support and Resources
+## 📚 Resources
 
 - [Prometheus Documentation](https://prometheus.io/docs/)
 - [Grafana Documentation](https://grafana.com/docs/)
 - [Kubernetes Documentation](https://kubernetes.io/docs/)
 - [Flask Documentation](https://flask.palletsprojects.com/)
-- [Prometheus Python Client](https://github.com/prometheus/client_python)
 
-## License
+---
+
+## ✅ Project Status
+
+**All components fully implemented and documented:**
+- ✅ 5 Microservices (Auth, BFF, Core, Customer Mgmt, UI)
+- ✅ Prometheus monitoring stack
+- ✅ Grafana dashboards
+- ✅ Kubernetes Dashboard integration
+- ✅ Docker Compose for local development
+- ✅ Kubernetes manifests for production
+- ✅ Terraform Infrastructure as Code
+- ✅ Complete API documentation
+- ✅ Health checks and probes
+- ✅ RBAC and security
+
+**Ready for immediate use in development, learning, and production environments!**
+
+---
+
+## 📄 License
 
 This project is provided as-is for learning and development purposes.

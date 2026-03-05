@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: customer-mgmt
+  namespace: supermarket
+  labels:
+    app: customer-mgmt
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: customer-mgmt
+  template:
+    metadata:
+      labels:
+        app: customer-mgmt
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5004"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: customer-mgmt
+        image: supermarket/customer-mgmt:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5004
+          name: http
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: AUTH_SERVICE_URL
+          value: "http://auth-service:5003"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5004
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5004
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "250m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: customer-mgmt
+  namespace: supermarket
+  labels:
+    app: customer-mgmt
+spec:
+  type: ClusterIP
+  selector:
+    app: customer-mgmt
+  ports:
+  - port: 5004
+    targetPort: 5004
+    protocol: TCP
+    name: http
