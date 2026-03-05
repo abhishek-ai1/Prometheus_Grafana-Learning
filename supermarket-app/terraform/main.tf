@@ -138,14 +138,22 @@ resource "kubernetes_deployment" "auth_service" {
   metadata {
     name      = "auth-service"
     namespace = kubernetes_namespace.supermarket.metadata[0].name
-    labels = { app = "auth-service" }
+    labels = {
+      app = "auth-service"
+    }
   }
   spec {
     replicas = 1
-    selector { match_labels = { app = "auth-service" } }
+    selector {
+      match_labels = {
+        app = "auth-service"
+      }
+    }
     template {
       metadata {
-        labels = { app = "auth-service" }
+        labels = {
+          app = "auth-service"
+        }
         annotations = {
           "prometheus.io/scrape" = "true"
           "prometheus.io/port"   = "5003"
@@ -154,12 +162,16 @@ resource "kubernetes_deployment" "auth_service" {
       }
       spec {
         container {
-          image = "supermarket/auth-service:latest"
-          name  = "auth-service"
+          image             = "supermarket/auth-service:latest"
+          name              = "auth-service"
           image_pull_policy = "IfNotPresent"
-          port { container_port = 5003 }
+          port {
+            container_port = 5003
+          }
           env_from {
-            config_map_ref { name = kubernetes_config_map.auth_service_config.metadata[0].name }
+            config_map_ref {
+              name = kubernetes_config_map.auth_service_config.metadata[0].name
+            }
           }
           liveness_probe {
             http_get {
@@ -181,7 +193,9 @@ resource "kubernetes_service" "auth_service" {
     namespace = kubernetes_namespace.supermarket.metadata[0].name
   }
   spec {
-    selector = { app = "auth-service" }
+    selector = {
+      app = "auth-service"
+    }
     port {
       port        = 5003
       target_port = 5003
@@ -195,14 +209,22 @@ resource "kubernetes_deployment" "core_service" {
   metadata {
     name      = "core-service"
     namespace = kubernetes_namespace.supermarket.metadata[0].name
-    labels = { app = "core-service" }
+    labels = {
+      app = "core-service"
+    }
   }
   spec {
     replicas = 1
-    selector { match_labels = { app = "core-service" } }
+    selector {
+      match_labels = {
+        app = "core-service"
+      }
+    }
     template {
       metadata {
-        labels = { app = "core-service" }
+        labels = {
+          app = "core-service"
+        }
         annotations = {
           "prometheus.io/scrape" = "true"
           "prometheus.io/port"   = "5001"
@@ -211,12 +233,16 @@ resource "kubernetes_deployment" "core_service" {
       }
       spec {
         container {
-          image = "supermarket/core-service:latest"
-          name  = "core-service"
+          image             = "supermarket/core-service:latest"
+          name              = "core-service"
           image_pull_policy = "IfNotPresent"
-          port { container_port = 5001 }
+          port {
+            container_port = 5001
+          }
           env_from {
-            config_map_ref { name = kubernetes_config_map.core_service_config.metadata[0].name }
+            config_map_ref {
+              name = kubernetes_config_map.core_service_config.metadata[0].name
+            }
           }
           liveness_probe {
             http_get {
@@ -238,7 +264,9 @@ resource "kubernetes_service" "core_service" {
     namespace = kubernetes_namespace.supermarket.metadata[0].name
   }
   spec {
-    selector = { app = "core-service" }
+    selector = {
+      app = "core-service"
+    }
     port {
       port        = 5001
       target_port = 5001
@@ -252,14 +280,22 @@ resource "kubernetes_deployment" "customer_mgmt" {
   metadata {
     name      = "customer-mgmt"
     namespace = kubernetes_namespace.supermarket.metadata[0].name
-    labels = { app = "customer-mgmt" }
+    labels = {
+      app = "customer-mgmt"
+    }
   }
   spec {
     replicas = 1
-    selector { match_labels = { app = "customer-mgmt" } }
+    selector {
+      match_labels = {
+        app = "customer-mgmt"
+      }
+    }
     template {
       metadata {
-        labels = { app = "customer-mgmt" }
+        labels = {
+          app = "customer-mgmt"
+        }
         annotations = {
           "prometheus.io/scrape" = "true"
           "prometheus.io/port"   = "5004"
@@ -268,12 +304,16 @@ resource "kubernetes_deployment" "customer_mgmt" {
       }
       spec {
         container {
-          image = "supermarket/customer-mgmt:latest"
-          name  = "customer-mgmt"
+          image             = "supermarket/customer-mgmt:latest"
+          name              = "customer-mgmt"
           image_pull_policy = "IfNotPresent"
-          port { container_port = 5004 }
+          port {
+            container_port = 5004
+          }
           env_from {
-            config_map_ref { name = kubernetes_config_map.customer_mgmt_config.metadata[0].name }
+            config_map_ref {
+              name = kubernetes_config_map.customer_mgmt_config.metadata[0].name
+            }
           }
           liveness_probe {
             http_get {
@@ -295,7 +335,9 @@ resource "kubernetes_service" "customer_mgmt" {
     namespace = kubernetes_namespace.supermarket.metadata[0].name
   }
   spec {
-    selector = { app = "customer-mgmt" }
+    selector = {
+      app = "customer-mgmt"
+    }
     port {
       port        = 5004
       target_port = 5004
@@ -309,14 +351,22 @@ resource "kubernetes_deployment" "bff_service" {
   metadata {
     name      = "bff-service"
     namespace = kubernetes_namespace.supermarket.metadata[0].name
-    labels = { app = "bff" }
+    labels = {
+      app = "bff"
+    }
   }
   spec {
     replicas = 2
-    selector { match_labels = { app = "bff" } }
+    selector {
+      match_labels = {
+        app = "bff"
+      }
+    }
     template {
       metadata {
-        labels = { app = "bff" }
+        labels = {
+          app = "bff"
+        }
         annotations = {
           "prometheus.io/scrape" = "true"
           "prometheus.io/port"   = "5000"
@@ -325,12 +375,16 @@ resource "kubernetes_deployment" "bff_service" {
       }
       spec {
         container {
-          image = "supermarket/bff:latest"
-          name  = "bff"
+          image             = "supermarket/bff:latest"
+          name              = "bff"
           image_pull_policy = "IfNotPresent"
-          port { container_port = 5000 }
+          port {
+            container_port = 5000
+          }
           env_from {
-            config_map_ref { name = kubernetes_config_map.bff_service_config.metadata[0].name }
+            config_map_ref {
+              name = kubernetes_config_map.bff_service_config.metadata[0].name
+            }
           }
           liveness_probe {
             http_get {
@@ -352,7 +406,9 @@ resource "kubernetes_service" "bff_service" {
     namespace = kubernetes_namespace.supermarket.metadata[0].name
   }
   spec {
-    selector = { app = "bff" }
+    selector = {
+      app = "bff"
+    }
     port {
       port        = 5000
       target_port = 5000
@@ -366,14 +422,22 @@ resource "kubernetes_deployment" "ui_service" {
   metadata {
     name      = "ui-service"
     namespace = kubernetes_namespace.supermarket.metadata[0].name
-    labels = { app = "ui-service" }
+    labels = {
+      app = "ui-service"
+    }
   }
   spec {
     replicas = 1
-    selector { match_labels = { app = "ui-service" } }
+    selector {
+      match_labels = {
+        app = "ui-service"
+      }
+    }
     template {
       metadata {
-        labels = { app = "ui-service" }
+        labels = {
+          app = "ui-service"
+        }
         annotations = {
           "prometheus.io/scrape" = "true"
           "prometheus.io/port"   = "5002"
@@ -382,12 +446,16 @@ resource "kubernetes_deployment" "ui_service" {
       }
       spec {
         container {
-          image = "supermarket/ui-service:latest"
-          name  = "ui-service"
+          image             = "supermarket/ui-service:latest"
+          name              = "ui-service"
           image_pull_policy = "IfNotPresent"
-          port { container_port = 5002 }
+          port {
+            container_port = 5002
+          }
           env_from {
-            config_map_ref { name = kubernetes_config_map.ui_service_config.metadata[0].name }
+            config_map_ref {
+              name = kubernetes_config_map.ui_service_config.metadata[0].name
+            }
           }
           liveness_probe {
             http_get {
@@ -409,7 +477,9 @@ resource "kubernetes_service" "ui_service" {
     namespace = kubernetes_namespace.supermarket.metadata[0].name
   }
   spec {
-    selector = { app = "ui-service" }
+    selector = {
+      app = "ui-service"
+    }
     type = "NodePort"
     port {
       port        = 5002
@@ -425,7 +495,7 @@ resource "kubernetes_config_map" "prometheus_config" {
     name      = "prometheus-server-conf"
     namespace = kubernetes_namespace.supermarket.metadata[0].name
   }
-  
+
   data = {
     "prometheus.yml" = <<EOF
 global:
