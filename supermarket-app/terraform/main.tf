@@ -509,6 +509,54 @@ resource "kubernetes_cluster_role_binding" "prometheus" {
   }
 }
 
+# ------------------ application RBAC ------------------
+# service account for in-cluster processes
+resource "kubernetes_service_account" "app_sa" {
+  metadata {
+    name      = "supermarket-app-sa"
+    namespace = kubernetes_namespace.supermarket.metadata[0].name
+  }
+}
+
+# role restricting to read-only access on key resources
+resource "kubernetes_role" "app_role" {
+  metadata {
+    name      = "supermarket-app-role"
+    namespace = kubernetes_namespace.supermarket.metadata[0].name
+  }
+
+  rule {
+    api_groups = [""]
+    resources  = ["pods", "services", "configmaps", "endpoints"]
+    verbs      = ["get", "list", "watch"]
+  }
+
+  rule {
+    api_groups = ["apps"]
+    resources  = ["deployments"]
+    verbs      = ["get", "list", "watch"]
+  }
+}
+
+resource "kubernetes_role_binding" "app_binding" {
+  metadata {
+    name      = "supermarket-app-binding"
+    namespace = kubernetes_namespace.supermarket.metadata[0].name
+  }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "Role"
+    name      = kubernetes_role.app_role.metadata[0].name
+  }
+
+  subject {
+    kind      = "ServiceAccount"
+    name      = kubernetes_service_account.app_sa.metadata[0].name
+    namespace = kubernetes_namespace.supermarket.metadata[0].name
+  }
+}
+
 # Apply YAML manifests for base resources (deployments/services/etc)
 # using kubernetes_manifest. This makes terraform responsible for the
 # Kubernetes objects defined in the k8s directory.  We still create the

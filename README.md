@@ -170,6 +170,14 @@ supermarket-app/
 - **Admin**: Full access to all tabs, user management, product upload
 - **Customer**: Products, Cart, Orders, Profile only
 
+### Kubernetes RBAC
+Within the Kubernetes deployment, all application pods run using a dedicated
+`ServiceAccount` named `supermarket-app-sa`.  Namespace‑scoped `Role`/`RoleBinding`
+resources grant the account read‑only access (`get`,`list`,`watch`) to core
+objects (pods, services, configmaps, deployments) so that the app can
+interact safely with the cluster without requiring a cluster‑admin token.
+See `k8s/base/rbac.yaml` for details.
+
 ---
 
 ## 📊 API Reference

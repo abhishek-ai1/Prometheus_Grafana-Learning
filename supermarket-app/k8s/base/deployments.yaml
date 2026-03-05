@@ -8,6 +8,7 @@ metadata:
   labels:
     app: auth-service
 spec:
+  serviceAccountName: supermarket-app-sa
   replicas: 2
   selector:
     matchLabels:
@@ -61,6 +62,7 @@ metadata:
   labels:
     app: customer-mgmt
 spec:
+  serviceAccountName: supermarket-app-sa
   replicas: 2
   selector:
     matchLabels:
@@ -114,6 +116,7 @@ metadata:
   labels:
     app: bff-service
 spec:
+  serviceAccountName: supermarket-app-sa
   replicas: 2
   selector:
     matchLabels:
@@ -167,6 +170,7 @@ metadata:
   labels:
     app: core-service
 spec:
+  serviceAccountName: supermarket-app-sa
   replicas: 2
   selector:
     matchLabels:
@@ -220,6 +224,7 @@ metadata:
   labels:
     app: ui-service
 spec:
+  serviceAccountName: supermarket-app-sa
   replicas: 2
   selector:
     matchLabels:

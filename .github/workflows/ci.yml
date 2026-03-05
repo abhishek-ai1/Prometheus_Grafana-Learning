@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, 'feature/**' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint-and-build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [auth-service,bff,core-service,customer-mgmt,ui-service]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          cd supermarket-app/services/${{ matrix.service }}
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Syntax check
+        run: |
+          python -m py_compile supermarket-app/services/${{ matrix.service }}/*.py || true
+
+      - name: Lint with flake8
+        run: |
+          pip install flake8
+          flake8 supermarket-app/services/${{ matrix.service }} || true
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: supermarket-app/services/${{ matrix.service }}
+          file: supermarket-app/services/${{ matrix.service }}/Dockerfile
+          push: false
+          tags: test/${{ matrix.service }}:latest
+
+  terraform:
+    runs-on: ubuntu-latest
+    needs: lint-and-build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      - name: Terraform fmt check
+        run: |
+          cd supermarket-app/terraform
+          terraform fmt -check
+
+      - name: Terraform init & validate
+        run: |
+          cd supermarket-app/terraform
+          terraform init -backend=false
+          terraform validate
+
+  yaml-lint:
+    runs-on: ubuntu-latest
+    needs: terraform
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install kubeval
+        run: |
+          curl -sLo kubeval https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64 && chmod +x kubeval && mv kubeval /usr/local/bin/
+
+      - name: Validate YAML manifests
+        run: |
+          find supermarket-app/k8s -name '*.yaml' -exec kubeval {} \\;
