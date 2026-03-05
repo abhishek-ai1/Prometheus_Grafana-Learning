@@ -17,7 +17,13 @@ spec:
   source:
     repoURL: https://github.com/abhishek-ai1/Prometheus_Grafana-Learning.git
     targetRevision: main
-    path: supermarket-app/k8s/base
+    # deploy using the Helm chart under supermarket-app/helm/supermarket
+    path: supermarket-app/helm/supermarket
+    helm:
+      values: |
+        registry: test
+        appName: supermarket-app
+        imageTag: latest
   destination:
     server: https://kubernetes.default.svc
     namespace: supermarket
@@ -26,5 +32,5 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
-    - CreateNamespace=true
+      - CreateNamespace=true
   revisionHistoryLimit: 10

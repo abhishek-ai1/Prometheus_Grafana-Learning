@@ -80,3 +80,50 @@ jobs:
       - name: Validate YAML manifests
         run: |
           find supermarket-app/k8s -name '*.yaml' -exec kubeval {} \\;
+
+  argo-integration:
+    runs-on: ubuntu-latest
+    needs: yaml-lint
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Kind cluster
+        uses: engineerd/setup-kind@v0.7.0
+        with:
+          version: v1.29.0
+          nodes: 1
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'latest'
+
+      - name: Deploy application manifests with Helm
+        run: |
+          kubectl create namespace supermarket || true
+          helm upgrade --install supermarket ./supermarket-app/helm/supermarket \
+            --namespace supermarket --set registry=test --set appName=supermarket-app --set imageTag=latest
+
+      - name: Install ArgoCD via Helm
+        run: |
+          kubectl create namespace argocd || true
+          helm repo add argo https://argoproj.github.io/argo-helm
+          helm repo update
+          helm upgrade --install argocd argo/argo-cd --namespace argocd --create-namespace
+          # wait for server
+          kubectl wait deployment/argocd-server -n argocd --for=condition=Available --timeout=120s
+
+      - name: Apply ArgoCD application resource
+        run: |
+          kubectl apply -f supermarket-app/k8s/argocd/application.yaml
+
+      - name: Verify ArgoCD application status
+        run: |
+          kubectl -n argocd wait --for=condition=Synced application/supermarket-app --timeout=120s || true
+          kubectl -n argocd get application supermarket-app

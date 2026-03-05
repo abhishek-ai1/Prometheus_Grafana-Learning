@@ -321,6 +321,9 @@ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.pas
 
 ### Deploy Application with ArgoCD
 
+The ArgoCD `Application` now points at the Helm chart (`supermarket-app/helm/supermarket`)
+and will render the same deployments/services defined previously.  To deploy:
+
 ```bash
 kubectl apply -f k8s/argocd/application.yaml
 
@@ -328,6 +331,17 @@ kubectl apply -f k8s/argocd/application.yaml
 argocd app get supermarket-app
 argocd app wait supermarket-app
 ```
+
+The GitHub Actions pipeline (`.github/workflows/ci.yml`) includes an
+`argo-integration` job that:
+
+1. spins up a temporary Kind cluster,
+2. installs the app using the Helm chart, and
+3. installs ArgoCD (via Helm) and applies the application resource,
+4. waits for the app to sync and prints its status.
+
+You can review the job log for a full end‑to‑end validation of the
+Helm/ArgoCD integration.
 
 ## Services Architecture
 

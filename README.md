@@ -15,7 +15,7 @@ A full-featured supermarket management system built with microservices architect
 - ✅ **Grafana Dashboards**: Pre-built visualizations
 - ✅ **Kubernetes Ready**: Manifests for Minikube, Kind, EKS, GKE, AKS
 - ✅ **Terraform IaC**: Infrastructure as Code deployment
-- ✅ **GitOps with ArgoCD**: optional, can auto-install via `deploy.sh` or Terraform (`enable_argocd`)
+- ✅ **GitOps with ArgoCD**: optional, can auto‑install via `deploy.sh` or Terraform (`enable_argocd`); the ArgoCD application now deploys the Helm chart directly
 - ✅ **Docker Compose**: Local development stack
 - ✅ **Professional UI**: Modern, responsive design with real-time monitoring dashboard
 
