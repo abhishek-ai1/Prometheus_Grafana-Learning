@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: {{ .name }}
-        image: {{ $.Values.registry }}/{{ $.Values.appName }}-{{ .name }}:{{ $.Values.imageTag }}
+        image: {{ if and $.Values.registry (ne $.Values.registry "") }}{{ $.Values.registry }}/{{ $.Values.appName }}-{{ .name }}:{{ $.Values.imageTag }}{{- else }}{{ $.Values.appName }}-{{ .name }}:{{ $.Values.imageTag }}{{- end }}
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: {{ .port }}

@@ -1,0 +1,2 @@
+# ignore node modules if any
+supermarket-app/node_modules/
