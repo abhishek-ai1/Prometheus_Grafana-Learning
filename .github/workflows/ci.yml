@@ -131,42 +131,32 @@ jobs:
             --set appName=supermarket-app \
             --set imageTag=latest \
             --wait \
-            --timeout=300s
+            --timeout=600s
 
       - name: Verify deployment
         run: |
-          # Wait for all deployments to be ready
-          kubectl wait --for=condition=available --timeout=300s deployment/auth-service -n supermarket
-          kubectl wait --for=condition=available --timeout=300s deployment/bff-service -n supermarket
-          kubectl wait --for=condition=available --timeout=300s deployment/core-service -n supermarket
-          kubectl wait --for=condition=available --timeout=300s deployment/customer-mgmt -n supermarket
-          kubectl wait --for=condition=available --timeout=300s deployment/ui-service -n supermarket
-
-          # Check pod status
+          kubectl wait --for=condition=available deployment --all -n supermarket --timeout=300s
           kubectl get pods -n supermarket
+
+      - name: Debug Kubernetes
+        if: failure()
+          run: |
+            kubectl get pods -A
+            kubectl describe pods -n supermarket
 
       - name: Install ArgoCD
         run: |
-          kubectl create namespace argocd || true
           helm repo add argo https://argoproj.github.io/argo-helm
           helm repo update
 
           helm upgrade --install argocd argo/argo-cd \
-          --namespace argocd \
-          --create-namespace \
-          --set server.service.type=ClusterIP \
-          --wait \
-          --timeout=300s
+            --namespace argocd \
+            --create-namespace \
+            --set server.service.type=ClusterIP \
+            --wait \
+            --timeout=600s
 
-          kubectl wait --for=condition=Established crd/applications.argoproj.io --timeout=120s
-
-          kubectl wait --for=condition=ready pod \
-            -l app.kubernetes.io/name=argocd-server \
-            -n argocd \
-            --timeout=180s
-
-      - name: Test ArgoCD application creation
+      - name: Deploy ArgoCD application
         run: |
           kubectl apply -f supermarket-app/k8s/argocd/application.yaml
           kubectl get applications -n argocd
-          kubectl describe application supermarket-app -n argocd
