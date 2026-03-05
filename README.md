@@ -101,6 +101,34 @@ terraform apply
 
 ---
 
+## 📸 Screenshots
+
+A set of application and monitoring screenshots. Replace the placeholder files with actual images to update the visuals.
+
+![Supermarket Home](screenshot/supermarket_home.png)
+
+![Admin Panel](screenshot/admin_panel.png)
+
+![Products Page](screenshot/products_page.png)
+
+![Inventory Page](screenshot/inventory_page.png)
+
+![Orders Page](screenshot/orders_page.png)
+
+![Cart Page](screenshot/cart_page.png)
+
+![Monitoring Dashboard](screenshot/monitoring_dashboard.png)
+
+![Grafana Dashboard](screenshot/grafana_dashboard.png)
+
+![Alertmanager Status](screenshot/alertmanager_status.png)
+
+> ⚠️ **Note:** the files in the `screenshot/` directory currently contain placeholder text. Replace them with actual PNG images; once real screenshots are saved there the previews above will display correctly.
+
+---
+
+---
+
 ## 📂 Project Structure
 
 ```
