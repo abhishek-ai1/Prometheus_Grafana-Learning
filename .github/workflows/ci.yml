@@ -164,3 +164,9 @@ jobs:
             -l app.kubernetes.io/name=argocd-server \
             -n argocd \
             --timeout=180s
+
+      - name: Test ArgoCD application creation
+        run: |
+          kubectl apply -f supermarket-app/k8s/argocd/application.yaml
+          kubectl get applications -n argocd
+          kubectl describe application supermarket-app -n argocd
