@@ -1,0 +1,42 @@
+# Default values for supermarket chart
+# See values in README or override with --set when installing.
+
+registry: "docker.io/abhishekjain2001"
+appName: "supermarket-app"
+imageTag: "latest"
+
+services:
+  - name: auth-service
+    port: 5003
+    metricsPort: 5003
+  - name: customer-mgmt
+    port: 5004
+    metricsPort: 5004
+  - name: bff-service
+    port: 5000
+    metricsPort: 5000
+  - name: core-service
+    port: 5001
+    metricsPort: 5001
+  - name: ui-service
+    port: 5002
+    metricsPort: 5002
+
+# Configuration data used in configmaps; override if needed
+config:
+  auth-service:
+    SECRET_KEY: "your-secret-key-change-in-production"
+    ENVIRONMENT: "production"
+  bff-service:
+    ENVIRONMENT: "production"
+    AUTH_SERVICE_URL: "http://auth-service:5003"
+    CUSTOMER_MGMT_URL: "http://customer-mgmt:5004"
+    CORE_SERVICE_URL: "http://core-service:5001"
+  customer-mgmt:
+    ENVIRONMENT: "production"
+    AUTH_SERVICE_URL: "http://auth-service:5003"
+  core-service:
+    ENVIRONMENT: "production"
+  ui-service:
+    ENVIRONMENT: "production"
+    API_BASE_URL: "http://bff-service:5000"

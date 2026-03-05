@@ -40,6 +40,89 @@ Base URL: `http://localhost:5000`
 
 **Status Code**: 200
 
+### Authentication Endpoints
+
+These endpoints are proxied by the BFF (port 5000) and backed by the auth service (port 5003).
+
+#### Register New User
+
+**Endpoint**: `POST /api/auth/register`
+
+**Description**: Create a new customer account. This is open to the public; registered users will have the `customer` role. The web application provides a dedicated registration page at `/register.html` which submits to this endpoint. Admins can also create users via the `/api/users` endpoints.
+
+**Request Body**:
+```json
+{
+  "email": "user@example.com",
+  "name": "Full Name",
+  "password": "secret"
+}
+```
+
+**Response**:
+```json
+{
+  "message": "Registration successful",
+  "user": {"id": "3", "email": "user@example.com", "name": "Full Name", "role": "customer"}
+}
+```
+
+**Status Codes**:
+- 201: Created
+- 400: Missing fields
+- 409: User already exists
+
+#### Login
+
+**Endpoint**: `POST /api/auth/login`
+
+**Description**: Authenticate a user and receive a JWT token.
+
+**Request Body**:
+```json
+{
+  "email": "user@example.com",
+  "password": "secret"
+}
+```
+
+**Response**:
+```json
+{
+  "token": "<jwt>",
+  "user": {"id":"1","name":"Admin User","email":"admin@supermarket.com","role":"admin"}
+}
+```
+
+**Status Codes**:
+- 200: Success
+- 401: Invalid credentials
+
+#### Verify Token
+
+**Endpoint**: `GET /api/auth/verify`
+
+**Description**: Validate an existing token; returns user info and RBAC permissions.
+
+**Headers**: `Authorization: Bearer <token>`
+
+**Response**:
+```json
+{
+  "user": { ... },
+  "permissions": { ... }
+}
+```
+
+#### Permissions
+
+**Endpoint**: `GET /api/auth/permissions`
+
+**Description**: Fetch RBAC permissions for the current user (some clients use this separately).
+
+**Headers**: `Authorization: Bearer <token>`
+
+
 ### Get All Products
 
 **Endpoint**: `GET /api/products`

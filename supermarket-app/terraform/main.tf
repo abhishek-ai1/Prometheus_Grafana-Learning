@@ -57,9 +57,15 @@ variable "namespace" {
 }
 
 variable "docker_registry" {
-  description = "Docker registry for images"
+  description = "Docker registry for images (e.g. docker.io/<user>)"
   type        = string
-  default     = "localhost:5000"
+  default     = "docker.io/abhishekjain2001"
+}
+
+variable "use_helm" {
+  description = "If true, deploy application using the Helm chart instead of raw YAML manifests"
+  type        = bool
+  default     = false
 }
 
 # Create Namespace
@@ -178,6 +184,40 @@ resource "kubernetes_cluster_role_binding" "prometheus" {
     name      = kubernetes_service_account.prometheus.metadata[0].name
     namespace = kubernetes_namespace.supermarket.metadata[0].name
   }
+}
+
+# Apply YAML manifests for base resources (deployments/services/etc)
+# using kubernetes_manifest. This makes terraform responsible for the
+# Kubernetes objects defined in the k8s directory.  We still create the
+# namespace and configmaps above; the YAML files may reference them.
+
+locals {
+  base_manifests = var.use_helm ? [] : fileset("${path.module}/../k8s/base", "*.yaml")
+  monitoring_manifests = var.use_helm ? [] : fileset("${path.module}/../k8s/monitoring", "*.yaml")
+}
+
+resource "kubernetes_manifest" "base" {
+  for_each = toset(local.base_manifests)
+  manifest = yamldecode(replace(file("${path.module}/../k8s/base/${each.value}"), "REGISTRY_PLACEHOLDER", var.docker_registry))
+}
+
+resource "kubernetes_manifest" "monitoring" {
+  for_each = toset(local.monitoring_manifests)
+  manifest = yamldecode(replace(file("${path.module}/../k8s/monitoring/${each.value}"), "REGISTRY_PLACEHOLDER", var.docker_registry))
+}
+
+resource "helm_release" "supermarket" {
+  count      = var.use_helm ? 1 : 0
+  name       = "supermarket"
+  chart      = "${path.module}/../helm/supermarket"
+  namespace  = kubernetes_namespace.supermarket.metadata[0].name
+  values = [
+    yamlencode({
+      registry = var.docker_registry
+      appName  = "supermarket-app"
+      imageTag = "latest"
+    })
+  ]
 }
 
 # Outputs

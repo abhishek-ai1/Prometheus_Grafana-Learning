@@ -30,7 +30,7 @@ Open in browser or use curl:
 
 ```bash
 # Web UI
-http://localhost:5002
+http://localhost:5002  # login page now allows registration
 
 # Grafana Dashboard
 http://localhost:3000
@@ -79,17 +79,27 @@ chmod +x stop-local.sh
 
 ### Step 1: Build Images
 
+Images are tagged under your Docker Hub namespace by default (`docker.io/abhishekjain2001`).
+Modify the `REGISTRY` environment variable if you use a different repository.
+
 ```bash
 cd /workspaces/Prometheus_Grafana-Learning/supermarket-app
 chmod +x build-images.sh
+# optional: override registry
+# REGISTRY=docker.io/abhishekjain2001 ./build-images.sh
 ./build-images.sh
 ```
 
 ### Step 2: Deploy
 
+If you are using images from Docker Hub (e.g. `abhishekjain2001/supermarket-app-*`) or a private registry, make sure they are pushed before deployment. The `build-images.sh` script tags images accordingly and `ansible/deploy.yml` or the `deploy-k8s.sh` helper will load/push and substitute the registry.
+
 ```bash
 chmod +x deploy-k8s.sh
 ./deploy-k8s.sh
+# or
+# push & deploy via Ansible (registry variable can be overridden):
+# ansible-playbook -i localhost, -c local ansible/deploy.yml -e "registry=docker.io/abhishekjain2001"
 ```
 
 ### Step 3: Verify Deployment
@@ -124,7 +134,8 @@ kubectl port-forward -n monitoring svc/prometheus 9090:9090
 
 ## Quick Test Checklist
 
-- [ ] UI loads (http://localhost:5002)
+- [ ] UI loads (http://localhost:5002) – login page has a prominent "Register" link
+- [ ] Can register a new customer account via the register page
 - [ ] Can browse products
 - [ ] Can create orders via API
 - [ ] Grafana accessible (admin/admin)

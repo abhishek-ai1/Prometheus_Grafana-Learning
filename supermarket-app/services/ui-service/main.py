@@ -47,6 +47,12 @@ def login_page():
     page_views.labels(page='login').inc()
     return send_from_directory('static', 'login.html')
 
+@app.route('/register', methods=['GET'])
+@app.route('/register.html', methods=['GET'])
+def register_page():
+    page_views.labels(page='register').inc()
+    return send_from_directory('static', 'register.html')
+
 @app.route('/products', methods=['GET'])
 def products_page():
     page_views.labels(page='products').inc()

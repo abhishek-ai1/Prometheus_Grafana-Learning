@@ -19,6 +19,12 @@ kubectl apply -f k8s/monitoring/prometheus.yaml
 echo "Deploying Grafana..."
 kubectl apply -f k8s/monitoring/grafana.yaml
 
+# replace registry placeholder with actual value (default to docker.io/abhishekjain2001)
+REGISTRY=${REGISTRY:-"docker.io/abhishekjain2001"}
+for f in k8s/services/*.yaml; do
+  sed -i "s|REGISTRY_PLACEHOLDER|${REGISTRY}|g" "$f"
+done
+
 # Deploy BFF Service
 echo "Deploying BFF Service..."
 kubectl apply -f k8s/services/bff.yaml

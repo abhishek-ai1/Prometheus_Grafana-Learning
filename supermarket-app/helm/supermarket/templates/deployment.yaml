@@ -1,45 +1,45 @@
+{{- range .Values.services }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: core-service
-  namespace: supermarket
+  name: {{ .name }}
+  namespace: {{ $.Release.Namespace | default "supermarket" }}
   labels:
-    app: core-service
-    version: v1
+    app: {{ .name }}
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: core-service
+      app: {{ .name }}
   template:
     metadata:
       labels:
-        app: core-service
+        app: {{ .name }}
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/port: "5001"
+        prometheus.io/port: "{{ .metricsPort }}"
         prometheus.io/path: "/metrics"
     spec:
       containers:
-      - name: core-service
-        image: REGISTRY_PLACEHOLDER/supermarket-app-core-service:latest
+      - name: {{ .name }}
+        image: {{ $.Values.registry }}/{{ $.Values.appName }}-{{ .name }}:{{ $.Values.imageTag }}
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 5001
+        - containerPort: {{ .port }}
           name: http
-        env:
-        - name: ENVIRONMENT
-          value: "production"
+        envFrom:
+        - configMapRef:
+            name: {{ .name }}-config
         livenessProbe:
           httpGet:
             path: /health
-            port: 5001
+            port: {{ .port }}
           initialDelaySeconds: 10
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /health
-            port: 5001
+            port: {{ .port }}
           initialDelaySeconds: 5
           periodSeconds: 5
         resources:
@@ -47,22 +47,7 @@ spec:
             memory: "128Mi"
             cpu: "100m"
           limits:
-            memory: "256Mi"
+            memory: "512Mi"
             cpu: "500m"
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: core-service
-  namespace: supermarket
-  labels:
-    app: core-service
-spec:
-  type: ClusterIP
-  selector:
-    app: core-service
-  ports:
-  - port: 5001
-    targetPort: 5001
-    protocol: TCP
-    name: http
+{{- end }}

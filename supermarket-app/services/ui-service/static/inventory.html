@@ -435,6 +435,11 @@
     </div>
     
     <script>
+        // Prevent non-admin users from viewing inventory
+        if (!isAdmin()) {
+            alert('Access restricted to administrators');
+            window.location.href = '/';
+        }
         let allProducts = [];
         let filteredProducts = [];
         let selectedProductId = null;

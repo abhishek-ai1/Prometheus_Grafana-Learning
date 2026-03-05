@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
       - name: bff
-        image: supermarket/bff:latest
+        image: REGISTRY_PLACEHOLDER/supermarket-app-bff-service:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000

@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: ui-service
-        image: supermarket/ui-service:latest
+        image: REGISTRY_PLACEHOLDER/supermarket-app-ui-service:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5002

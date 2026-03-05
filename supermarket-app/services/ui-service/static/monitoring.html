@@ -402,6 +402,11 @@
     </div>
     
     <script>
+        // Guard page against non-admins
+        if (!isAdmin()) {
+            alert('Monitoring restricted to admins');
+            window.location.href = '/';
+        }
         let requestsChart = null;
         let responseTimeChart = null;
         

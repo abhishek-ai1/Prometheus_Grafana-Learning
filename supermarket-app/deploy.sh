@@ -46,9 +46,10 @@ show_menu() {
     echo "2. Kubernetes with Minikube"
     echo "3. Kubernetes with Kind"
     echo "4. Terraform (Infrastructure as Code)"
-    echo "5. ArgoCD (GitOps Deployment)"
-    echo "6. Clean Up & Stop Services"
-    echo "7. View Service Status"
+    echo "5. Helm chart deployment"
+    echo "6. ArgoCD (GitOps Deployment)"
+    echo "7. Clean Up & Stop Services"
+    echo "8. View Service Status"
     echo "0. Exit"
     echo ""
 }
@@ -119,6 +120,32 @@ deploy_minikube() {
     echo ""
 }
 
+# Helm Deployment
+deploy_helm() {
+    print_header "Starting Helm Deployment"
+
+    check_command helm || return 1
+    check_command kubectl || return 1
+
+    # optionally build/push before chart install (skip with SKIP_BUILD=true once pushed)
+    if [ "$PUSH" == "true" ] && [ "$SKIP_BUILD" != "true" ]; then
+        echo "\nBuilding and uploading images to registry before Helm run"
+        REGISTRY=${REGISTRY:-docker.io/abhishekjain2001} ./build-images.sh
+    fi
+
+    # install or upgrade
+    helm upgrade --install supermarket ./helm/supermarket \
+        --namespace supermarket \
+        --create-namespace \
+        --set registry=${REGISTRY:-docker.io/abhishekjain2001} \
+        --set appName=supermarket-app \
+        --set imageTag=latest
+
+    print_success "Helm deployment complete!"
+    echo "You can run 'kubectl get svc -n supermarket' to verify."
+    echo "Use port-forward if needed (same as other options)."
+}
+
 # Kind Deployment
 deploy_kind() {
     print_header "Starting Kind Deployment"
@@ -166,12 +193,22 @@ deploy_terraform() {
     check_command terraform || return 1
     check_command kubectl || return 1
     
+    # optionally build/push images before provisioning (skip with SKIP_BUILD=true once your registry has them)
+    if [ "$PUSH" == "true" ] && [ "$SKIP_BUILD" != "true" ]; then
+        echo "\nBuilding and uploading images to registry before Terraform run"
+        REGISTRY=${REGISTRY:-docker.io/abhishekjain2001} ./build-images.sh
+    fi
+    
     print_warning "Initializing Terraform..."
     cd terraform
     terraform init
     
     print_warning "Planning infrastructure..."
-    terraform plan
+    tfvars="-var='docker_registry=${REGISTRY:-docker.io/abhishekjain2001}'"
+    if [ "$USE_HELM" == "true" ]; then
+        tfvars="$tfvars -var='use_helm=true'"
+    fi
+    terraform plan $tfvars
     
     echo ""
     read -p "Do you want to apply this configuration? (yes/no): " confirm
@@ -182,7 +219,7 @@ deploy_terraform() {
     fi
     
     print_warning "Applying configuration..."
-    terraform apply -auto-approve
+    terraform apply -auto-approve $tfvars
     
     print_header "Terraform Outputs"
     terraform output
@@ -283,7 +320,7 @@ view_status() {
 main() {
     while true; do
         show_menu
-        read -p "Select option (0-7): " option
+        read -p "Select option (0-8): " option
         
         case $option in
             1)
@@ -299,12 +336,15 @@ main() {
                 deploy_terraform
                 ;;
             5)
-                deploy_argocd
+                deploy_helm
                 ;;
             6)
-                cleanup
+                deploy_argocd
                 ;;
             7)
+                cleanup
+                ;;
+            8)
                 view_status
                 ;;
             0)

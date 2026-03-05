@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Supermarket Management System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .login-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 450px;
+            width: 100%;
+            margin: 20px;
+            padding: 60px 40px;
+            animation: slideUp 0.5s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .logo-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            color: #666;
+            text-align: center;
+            font-size: 0.95em;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+        
+        input[type="email"],
+        input[type="password"],
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+        
+        input[type="email"]:focus,
+        input[type="password"]:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        
+        .login-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .login-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            font-size: 0.9em;
+            margin-top: 8px;
+            display: none;
+            animation: shake 0.5s ease-out;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <div class="logo-icon">🛒</div>
+            <h1>Register</h1>
+        </div>
+        <div class="subtitle">Create a customer account</div>
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="reg_email">Email Address</label>
+                <input type="email" id="reg_email" placeholder="Enter your email" required>
+            </div>
+            <div class="form-group">
+                <label for="reg_name">Full Name</label>
+                <input type="text" id="reg_name" placeholder="Your name" required>
+            </div>
+            <div class="form-group">
+                <label for="reg_password">Password</label>
+                <input type="password" id="reg_password" placeholder="Choose a password" required>
+            </div>
+            <div class="error-message" id="regError"></div>
+            <button type="submit" class="login-btn" id="registerBtn">
+                <span class="btn-text">Register</span>
+                <div class="spinner"></div>
+            </button>
+            <p style="margin-top:15px; text-align:center;"><a href="/login.html">Already have an account? Sign in</a></p>
+        </form>
+    </div>
+
+    <script>
+        const AUTH_SERVICE = '';
+
+        function setLoading(isLoading) {
+            const btn = document.getElementById('registerBtn');
+            const spinner = btn.querySelector('.spinner');
+            const text = btn.querySelector('.btn-text');
+            if (isLoading) {
+                btn.disabled = true;
+                text.style.display = 'none';
+                spinner.style.display = 'block';
+            } else {
+                btn.disabled = false;
+                text.style.display = 'inline';
+                spinner.style.display = 'none';
+            }
+        }
+
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('reg_email').value;
+            const name = document.getElementById('reg_name').value;
+            const password = document.getElementById('reg_password').value;
+            const errorEl = document.getElementById('regError');
+
+            setLoading(true);
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, name, password })
+                });
+                if (response.ok) {
+                    alert('Registration successful, please login');
+                    window.location.href = '/login.html';
+                } else {
+                    const err = await response.json();
+                    errorEl.textContent = err.error || 'Registration failed';
+                    errorEl.classList.add('show');
+                }
+            } catch (err) {
+                errorEl.textContent = 'Connection error';
+                errorEl.classList.add('show');
+            } finally {
+                setLoading(false);
+            }
+        });
+    </script>
+</body>
+</html>

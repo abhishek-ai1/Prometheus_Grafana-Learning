@@ -1,0 +1,19 @@
+{{- range .Values.services }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .name }}
+  namespace: {{ $.Release.Namespace | default "supermarket" }}
+  labels:
+    app: {{ .name }}
+spec:
+  type: {{ if eq .name "bff-service" }}LoadBalancer{{ else if eq .name "ui-service" }}LoadBalancer{{ else }}ClusterIP{{ end }}
+  ports:
+  - port: {{ .port }}
+    targetPort: {{ .port }}
+    protocol: TCP
+    name: http
+  selector:
+    app: {{ .name }}
+---
+{{- end }}

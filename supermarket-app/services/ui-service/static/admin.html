@@ -406,6 +406,11 @@
     </div>
     
     <script>
+        // redirect non-admins immediately
+        if (!isAdmin()) {
+            alert('Admin area only');
+            window.location.href = '/';
+        }
         let allProducts = [];
         let allUsers = [];
         let availableRoles = [];

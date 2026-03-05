@@ -365,6 +365,24 @@ def logout():
     """Logout endpoint (stateless - just returns success)"""
     return jsonify({'message': 'Logged out successfully'}), 200
 
+# ==================== Registration Endpoint ====================
+
+@app.route('/api/auth/register', methods=['POST'])
+def register():
+    """Allow anyone to create a customer account"""
+    data = request.get_json()
+    email = data.get('email')
+    name = data.get('name')
+    password = data.get('password')
+    role = 'customer'
+    if not email or not name or not password:
+        return jsonify({'error': 'Email, name, and password required'}), 400
+    if get_user_by_email(email):
+        return jsonify({'error': 'User already exists'}), 409
+    user_id = create_user_db(email, name, password, role)
+    log_user_action('public', 'register', email)
+    return jsonify({'message': 'Registration successful', 'user': {'id': user_id, 'email': email, 'name': name, 'role': role}}), 201
+
 # ==================== User Management (Admin Only) ====================
 
 @app.route('/api/users', methods=['GET'])

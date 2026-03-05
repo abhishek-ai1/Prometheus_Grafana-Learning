@@ -1,0 +1,15 @@
+# ConfigMaps for services
+{{- range $svc := .Values.services }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $svc.name }}-config
+  namespace: {{ $.Release.Namespace | default "supermarket" }}
+data:
+  {{- with index $.Values.config $svc.name }}
+  {{- range $key, $val := . }}
+  {{ $key }}: "{{ $val }}"
+  {{- end }}
+  {{- end }}
+---
+{{- end }}

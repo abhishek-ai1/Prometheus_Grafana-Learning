@@ -136,11 +136,22 @@ chmod +x run-local.sh
 ./run-local.sh
 ```
 
+> **Helm charts** are available under `helm/supermarket` if you prefer to deploy via Helm.
+
 This will:
-- Build all Docker images
+- Build all Docker images (use `REGISTRY` and `PUSH=true` to tag & upload to a registry)
 - Start all services with Docker Compose
 - Initialize Prometheus and Grafana
 
+You can build‑and‑upload using the helper script directly:
+```bash
+# set your Docker Hub/registry user and enable push (runs once)
+REGISTRY=docker.io/myuser PUSH=true ./build-images.sh
+
+# on subsequent invocations avoid rebuilding by skipping:
+REGISTRY=docker.io/myuser PUSH=true SKIP_BUILD=true ./deploy.sh 2    # Minikube
+REGISTRY=docker.io/myuser PUSH=true SKIP_BUILD=true ./deploy.sh 4    # Terraform
+```
 ### 3. Access Services
 
 | Service | URL | Credentials |

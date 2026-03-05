@@ -1,0 +1,74 @@
+---
+- name: Build and deploy Supermarket App
+  hosts: localhost
+  connection: local
+  vars:
+    # use your Docker Hub namespace; images will be tagged as <registry>/supermarket-app-<service>
+    registry: "docker.io/abhishekjain2001"   # change as needed
+    images:
+      - auth-service
+      - bff
+      - core-service
+      - customer-mgmt
+      - ui-service
+  tasks:
+    - name: Ensure Docker registry variable is set
+      assert:
+        that:
+          - registry is defined
+        fail_msg: "Registry variable must be defined"
+
+    - name: Build docker images
+      shell: |
+        # directory name for bff is 'bff'
+        svc={{ item }}
+        if [ "${svc}" = "bff" ]; then svc=bff; fi
+        docker build -t {{ registry }}/supermarket-app-${svc}:latest services/${svc}
+      args:
+        chdir: "{{ playbook_dir }}/.."
+      loop: "{{ images }}"
+
+    - name: Push images to registry
+      shell: |
+        svc={{ item }}
+        if [ "${svc}" = "bff" ]; then svc=bff; fi
+        docker push {{ registry }}/supermarket-app-${svc}:latest
+      args:
+        chdir: "{{ playbook_dir }}/.."
+      loop: "{{ images }}"
+      when: registry != 'localhost:5000'  # skip push for local minikube
+
+    - name: Load images into minikube
+      shell: |
+        svc={{ item }}
+        if [ "${svc}" = "bff" ]; then svc=bff; fi
+        minikube image load {{ registry }}/supermarket-app-${svc}:latest
+      loop: "{{ images }}"
+      when: "'minikube' in lookup('pipe','kubectl config current-context')"
+
+    - name: Run terraform apply
+      shell: |
+        cd {{ playbook_dir }}/../terraform && terraform init && terraform apply -auto-approve
+
+    - name: Substitute registry placeholder in k8s manifests
+      shell: |
+        for f in {{ playbook_dir }}/../k8s/base/*.yaml; do
+          sed -i "s|REGISTRY_PLACEHOLDER|{{ registry }}|g" "$f"
+        done
+
+    - name: Apply Kubernetes manifests
+      shell: |
+        kubectl apply -f {{ playbook_dir }}/../k8s/base
+        kubectl apply -f {{ playbook_dir }}/../k8s/monitoring
+
+    - name: Wait for deployments to be ready
+      shell: |
+        kubectl -n supermarket rollout status deployment/auth-service --timeout=120s
+        kubectl -n supermarket rollout status deployment/bff-service --timeout=120s
+        kubectl -n supermarket rollout status deployment/core-service --timeout=120s
+        kubectl -n supermarket rollout status deployment/customer-mgmt --timeout=120s
+        kubectl -n supermarket rollout status deployment/ui-service --timeout=120s
+
+    - name: Output service URLs
+      shell: |
+        echo "UI: $(kubectl -n supermarket get svc ui-service -o jsonpath='{.spec.clusterIP}')"

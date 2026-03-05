@@ -75,13 +75,29 @@ docker-compose down
 - kubectl
 - Helm (optional, for package management)
 
-#### Steps
+#### Steps (plain manifests)
 
 ```bash
 # 1. Start Minikube cluster
 minikube start --cpus 4 --memory 8192 --disk-size 50000mb
 
-# 2. Build and load Docker images into Minikube
+# 2. Prepare Docker images
+
+You only need to build and upload the application images **once**. After they are in your Docker Hub (or other registry), subsequent deployments will pull directly from the registry and will not rebuild.
+
+Build & push the images once:  
+```bash
+cd supermarket-app
+REGISTRY=docker.io/<you> PUSH=true ./build-images.sh
+# optional: SKIP_BUILD=true can be set on later runs to bypass rebuilding
+```
+
+The `deploy.sh` helper script respects the `PUSH` and `SKIP_BUILD` environment variables:
+* set `PUSH=true` on the first run to upload images
+* later, run with `SKIP_BUILD=true` to avoid rebuilding
+
+If you prefer to pull straight from the cluster daemon (Minikube/Kind), skip the registry step:
+
 eval $(minikube docker-env)
 docker-compose build
 
@@ -91,6 +107,25 @@ kubectl apply -f base/namespace-configmap.yaml
 kubectl apply -f base/deployments.yaml
 kubectl apply -f base/services.yaml
 kubectl apply -f monitoring/kubernetes-monitoring.yaml
+```
+
+#### Alternate: using Helm
+
+A Helm chart is available at `helm/supermarket`.  It templates the same deployments, services and configmaps and accepts a `registry` value so images come from your repo.
+
+```bash
+# build & push images (if not using the cluster daemon)
+REGISTRY=docker.io/<you> PUSH=true ./build-images.sh
+
+# install/upgrade via Helm
+helm upgrade --install supermarket ./helm/supermarket \
+    --namespace supermarket --create-namespace \
+    --set registry=docker.io/<you> \
+    --set appName=supermarket-app \
+    --set imageTag=latest
+```
+
+The `deploy.sh` helper also exposes this as option 5 in its menu.
 
 # 4. Install ArgoCD (optional)
 kubectl create namespace argocd
@@ -118,7 +153,6 @@ minikube stop
 # 9. Delete cluster
 minikube delete
 ```
-
 ### Option 3: Kubernetes with Kind (Alternative)
 
 #### Prerequisites
@@ -145,6 +179,20 @@ kind delete cluster --name supermarket
 ```
 
 ### Option 4: Infrastructure as Code with Terraform
+
+The provided Terraform configuration now includes a `docker_registry` variable; it will automatically substitute the `REGISTRY_PLACEHOLDER` string found in the YAML manifests with the registry you supply (for example `docker.io/abhishekjain2001`). Set it when running:
+
+```bash
+cd supermarket-app/terraform
+terraform init
+terraform plan -var='docker_registry=mydockerhubuser' [-var='use_helm=true']
+terraform apply -var='docker_registry=mydockerhubuser' [-var='use_helm=true'] -auto-approve
+
+By default the raw YAML manifests under `k8s/` are applied.  Set `use_helm=true` to have Terraform install the Helm chart instead.  (You can test both sequentially by first applying with helm disabled, then destroying and reapplying with it enabled.)
+```
+
+You can also leave the default `localhost:5000` when running inside Minikube and use `minikube image load` (the Ansible playbook handles this as well).
+
 
 #### Prerequisites
 - Terraform >= 1.0
