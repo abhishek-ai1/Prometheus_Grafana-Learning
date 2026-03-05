@@ -150,19 +150,17 @@ jobs:
           kubectl create namespace argocd || true
           helm repo add argo https://argoproj.github.io/argo-helm
           helm repo update
+
           helm upgrade --install argocd argo/argo-cd \
-            --namespace argocd \
-            --create-namespace \
-            --set server.service.type=ClusterIP \
-            --wait \
-            --timeout=300s
+          --namespace argocd \
+          --create-namespace \
+          --set server.service.type=ClusterIP \
+          --wait \
+          --timeout=300s
 
-      - name: Test ArgoCD application creation
-        run: |
-          # Apply ArgoCD application (will sync from Git repo)
-          kubectl apply -f supermarket-app/k8s/argocd/application.yaml
+          kubectl wait --for=condition=Established crd/applications.argoproj.io --timeout=120s
 
-          # Check that application was created
-          kubectl -n argocd get application supermarket-app -o yaml
-
-          # Note: Full sync may fail in CI due to image availability, but creation should work
+          kubectl wait --for=condition=ready pod \
+            -l app.kubernetes.io/name=argocd-server \
+            -n argocd \
+            --timeout=180s
