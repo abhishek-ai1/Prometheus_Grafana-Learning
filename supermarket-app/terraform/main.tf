@@ -16,45 +16,15 @@ terraform {
 }
 
 provider "kubernetes" {
-  config_path = var.kubeconfig_path
+  config_path    = var.kubeconfig_path
   config_context = var.k8s_context
 }
 
 provider "helm" {
   kubernetes {
-    config_path = var.kubeconfig_path
+    config_path    = var.kubeconfig_path
     config_context = var.k8s_context
   }
-}
-
-variable "kubeconfig_path" {
-  description = "Path to kubeconfig file"
-  type        = string
-  default     = "~/.kube/config"
-}
-
-variable "k8s_context" {
-  description = "Kubernetes context to use"
-  type        = string
-  default     = "minikube"
-}
-
-variable "namespace" {
-  description = "Kubernetes namespace"
-  type        = string
-  default     = "supermarket"
-}
-
-variable "docker_registry" {
-  description = "Docker registry for images (e.g. docker.io/<user>)"
-  type        = string
-  default     = "docker.io/abhishekjain2001"
-}
-
-variable "use_helm" {
-  description = "If true, deploy application using the Helm chart instead of raw YAML manifests"
-  type        = bool
-  default     = false
 }
 
 # Create Namespace

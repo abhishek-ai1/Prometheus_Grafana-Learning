@@ -71,7 +71,7 @@ variable "enable_grafana" {
 }
 
 variable "enable_argocd" {
-  description = "Enable ArgoCD deployment and application resources via Terraform"  
+  description = "Enable ArgoCD deployment and application resources via Terraform"
   type        = bool
   default     = true
 }
@@ -92,4 +92,34 @@ variable "prometheus_node_port" {
   description = "NodePort for Prometheus Service"
   type        = number
   default     = 30090
+}
+
+variable "kubeconfig_path" {
+  description = "Path to kubeconfig file"
+  type        = string
+  default     = "~/.kube/config"
+}
+
+variable "k8s_context" {
+  description = "Kubernetes context to use"
+  type        = string
+  default     = "minikube"
+}
+
+variable "namespace" {
+  description = "Kubernetes namespace"
+  type        = string
+  default     = "supermarket"
+}
+
+variable "docker_registry" {
+  description = "Docker registry for images (e.g. docker.io/<user>)"
+  type        = string
+  default     = "docker.io/abhishekjain2001"
+}
+
+variable "use_helm" {
+  description = "If true, deploy application using the Helm chart instead of raw YAML manifests"
+  type        = bool
+  default     = false
 }
