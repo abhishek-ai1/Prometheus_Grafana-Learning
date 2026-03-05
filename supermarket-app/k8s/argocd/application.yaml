@@ -21,7 +21,7 @@ spec:
     path: supermarket-app/helm/supermarket
     helm:
       values: |
-        registry: test
+        registry: ""
         appName: supermarket-app
         imageTag: latest
   destination:

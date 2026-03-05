@@ -104,11 +104,27 @@ jobs:
         with:
           version: 'latest'
 
+      - name: Build and load Docker images
+        run: |
+          # Build images
+          docker build -t supermarket-app-auth-service:latest ./supermarket-app/services/auth-service
+          docker build -t supermarket-app-bff-service:latest ./supermarket-app/services/bff
+          docker build -t supermarket-app-core-service:latest ./supermarket-app/services/core-service
+          docker build -t supermarket-app-customer-mgmt:latest ./supermarket-app/services/customer-mgmt
+          docker build -t supermarket-app-ui-service:latest ./supermarket-app/services/ui-service
+          
+          # Load into Kind
+          kind load docker-image supermarket-app-auth-service:latest --name chart-testing
+          kind load docker-image supermarket-app-bff-service:latest --name chart-testing
+          kind load docker-image supermarket-app-core-service:latest --name chart-testing
+          kind load docker-image supermarket-app-customer-mgmt:latest --name chart-testing
+          kind load docker-image supermarket-app-ui-service:latest --name chart-testing
+
       - name: Deploy application manifests with Helm
         run: |
           kubectl create namespace supermarket || true
           helm upgrade --install supermarket ./supermarket-app/helm/supermarket \
-            --namespace supermarket --set registry=test --set appName=supermarket-app --set imageTag=latest
+            --namespace supermarket --set registry="" --set appName=supermarket-app --set imageTag=latest
 
       - name: Install ArgoCD via Helm
         run: |
