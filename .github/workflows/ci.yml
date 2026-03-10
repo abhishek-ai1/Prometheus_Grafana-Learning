@@ -141,7 +141,10 @@ jobs:
             echo "====Pod Details===="
             kubectl get po -A -n supermarket
             echo "====Pod Logs===="  
-            kubectl logs -n supermarket --all-containers=true --tail=100
+            for pod in $(kubectl get pods -n supermarket -o jsonpath='{.items[*].metadata.name}'); do \
+              echo "===== Logs for $pod =====" \
+              kubectl logs -n supermarket $pod --tail=100 || true \
+              done
 
       - name: Install ArgoCD
         run: |
