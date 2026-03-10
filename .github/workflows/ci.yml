@@ -131,18 +131,17 @@ jobs:
             --set appName=supermarket-app \
             --set imageTag=latest \
             --wait \
-            --timeout=600s
-
-      - name: Verify deployment
-        run: |
-          kubectl wait --for=condition=available deployment --all -n supermarket --timeout=300s
-          kubectl get pods -n supermarket
-
+            --timeout=300s
+            
       - name: Debug Kubernetes
         if: failure()
           run: |
-            kubectl get pods -A
-            kubectl describe pods -n supermarket
+            echo "====All Resources===="
+            kubectl get all -n supermarket
+            echo "====Pod Details===="
+            kubectl get po -A -n supermarket
+            echo "====Pod Logs===="  
+            kubectl logs -n supermarket --all-containers=true --tail=100
 
       - name: Install ArgoCD
         run: |
@@ -154,7 +153,7 @@ jobs:
             --create-namespace \
             --set server.service.type=ClusterIP \
             --wait \
-            --timeout=600s
+            --timeout=300s
 
       - name: Deploy ArgoCD application
         run: |
