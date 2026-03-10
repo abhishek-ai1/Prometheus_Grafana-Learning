@@ -135,7 +135,7 @@ jobs:
             
       - name: Debug Kubernetes
         if: failure()
-          run: |
+        run: |
             echo "====All Resources===="
             kubectl get all -n supermarket
             echo "====Pod Details===="
